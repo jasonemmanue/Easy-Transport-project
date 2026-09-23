@@ -1,0 +1,54 @@
+# Archives (fichiers historiques non versionnés)
+_archive_chauffeurs/
+_old_git/
+**/_old_git/
+
+# Flutter
+Application/.dart_tool/
+Application/.flutter-plugins
+Application/.flutter-plugins-dependencies
+Application/.packages
+Application/.pub-cache/
+Application/.pub/
+Application/build/
+Application/**/generated_plugin_registrant.*
+Application/.idea/
+Application/.vscode/
+Application/*.iml
+Application/android/.gradle/
+Application/android/local.properties
+Application/android/**/GeneratedPluginRegistrant.java
+Application/android/app/debug/
+Application/android/app/profile/
+Application/android/app/release/
+Application/ios/Pods/
+Application/ios/Runner.xcworkspace/xcuserdata/
+Application/ios/Runner.xcodeproj/xcuserdata/
+
+# Next.js
+Backoffice/node_modules/
+Backoffice/.next/
+Backoffice/out/
+Backoffice/dist/
+Backoffice/.env
+Backoffice/.env.local
+Backoffice/.env.*.local
+
+# FastAPI
+API/__pycache__/
+API/**/__pycache__/
+API/*.pyc
+API/.venv/
+API/env/
+API/.env
+API/*.sqlite3
+API/.pytest_cache
+API/.mypy_cache
+API/firebase-credentials.json
+
+# System
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
