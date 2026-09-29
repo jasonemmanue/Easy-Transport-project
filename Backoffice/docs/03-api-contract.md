@@ -4,7 +4,7 @@
 Firestore, Realtime Database, Cloud Functions (TypeScript), Auth et Storage.
 
 Ce document est le **contrat commun aux trois dépôts clients**. Toute modification doit être
-répercutée à l'identique dans `Easy-transport-users` et `Easy-transport-Chauffeurs`. Il met en
+répercutée à l'identique dans `Carlinq-users` et `Carlinq-Chauffeurs`. Il met en
 avant ce que consomme le panneau d'administration.
 
 ---
@@ -162,9 +162,9 @@ avec l'Admin SDK. Chacune vérifie le `adminRole` et **écrit dans `auditLogs`**
 ```jsonc
 // adminPreviewPricing({ section: 'stops', payload: {…} }) →
 { "sampleRides": [
-    { "label": "Easy Flexible Serenity · 7,4 km · 2 arrêts · 2 places",
+    { "label": "Carlinq Flexible Serenity · 7,4 km · 2 arrêts · 2 places",
       "currentTotalXaf": 7452, "newTotalXaf": 7652, "deltaXaf": 200, "deltaPercent": 2.7 },
-    { "label": "Easy Taxi · 5 km · 1 arrêt · 1 place",
+    { "label": "Carlinq Taxi · 5 km · 1 arrêt · 1 place",
       "currentTotalXaf": 1250, "newTotalXaf": 1250, "deltaXaf": 0, "deltaPercent": 0 } ],
   "estimatedMonthlyRevenueDeltaXaf": 3200000,
   "affectedRidesLast30Days": 128400 }
@@ -174,13 +174,13 @@ avec l'Admin SDK. Chacune vérifie le `adminRole` et **écrit dans `auditLogs`**
 // adminUpdatePricing({ section: 'traffic', payload: {…}, effectiveFrom: '…' })
 // invalid-argument si severeRatePerMinuteXaf <= moderateRatePerMinuteXaf
 // invalid-argument si effectiveFrom est dans le passé
-// failed-precondition si une clé de classe est fournie pour easy_taxi
+// failed-precondition si une clé de classe est fournie pour carlinq_taxi
 ```
 
 ### Chauffeurs — UC-AD01, UC-AD03, UC-AD11
 
 `adminReviewDocument` (approuver / rejeter, **motif obligatoire**) · `adminValidateDriver` ·
-`adminSetServiceClass` (notes d'inspection obligatoires, refusée en Easy Taxi) ·
+`adminSetServiceClass` (notes d'inspection obligatoires, refusée en Carlinq Taxi) ·
 `adminAdjustPoints` (`{ delta, reason }`) · `adminSuspendUser` · `adminReactivateDriver` ·
 `adminExcludeDriver`
 
@@ -364,7 +364,7 @@ Codes métier admin : `PRICING_INVALID_RANGE` · `PRICING_EFFECTIVE_DATE_IN_PAST
 `ROAD_SEGMENT_OVERLAPS` · `DISPUTE_ALREADY_RESOLVED` · `DRIVER_HAS_ACTIVE_RIDE` ·
 `CLASS_NOT_APPLICABLE_TO_MODE` · `INSUFFICIENT_ROLE` · `EXPORT_TOO_LARGE`
 
-> **Liste exhaustive de la plateforme** : `Easy-transport-users/docs/03-api-contract.md` §5. Aucun
+> **Liste exhaustive de la plateforme** : `Carlinq-users/docs/03-api-contract.md` §5. Aucun
 > code n'est ajouté ici sans y être ajouté d'abord.
 
 ---
@@ -397,9 +397,9 @@ renvoyé par `adminPreviewPricing`.
 
 | Environnement | Projet Firebase |
 |---|---|
-| Développement | `easytransport-dev` |
-| Pré-production | `easytransport-staging` |
-| Production | `easytransport-prod` |
+| Développement | `carlinq-dev` |
+| Pré-production | `carlinq-staging` |
+| Production | `carlinq-prod` |
 
 Plan **Blaze** obligatoire.
 

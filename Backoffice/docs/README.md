@@ -23,11 +23,11 @@ lecture recommandé.
 `02-modele-donnees.md` et `03-api-contract.md` décrivent des contrats **communs** aux trois
 applications. Toute modification doit être répercutée à l'identique dans :
 
-- [`Easy-transport-users`](https://github.com/jasonemmanue/Easy-transport-users)
-- [`Easy-transport-Chauffeurs`](https://github.com/jasonemmanue/Easy-transport-Chauffeurs)
+- [`Carlinq-users`](https://github.com/jasonemmanue/Carlinq-users)
+- [`Carlinq-Chauffeurs`](https://github.com/jasonemmanue/Carlinq-Chauffeurs)
 
 La formule de tarification complète est détaillée côté passager
-(`Easy-transport-users/docs/04-tarification.md`) ; ici,
+(`Carlinq-users/docs/04-tarification.md`) ; ici,
 [`04-configuration-tarifaire.md`](04-configuration-tarifaire.md) décrit **comment on la règle**.
 
 Une divergence entre les trois dépôts est un bug de spécification, pas une adaptation locale.
@@ -61,7 +61,7 @@ TypeScript.
 
 1. **Le panneau configure, les Cloud Functions calculent.** Aucun prix n'est calculé ici.
 2. **Aucune valeur tarifaire ne change sans aperçu d'impact, date d'effet, confirmation et audit.**
-3. **Easy Taxi n'a ni classe de service, ni supplément route dégradée.** Toute interface qui en
+3. **Carlinq Taxi n'a ni classe de service, ni supplément route dégradée.** Toute interface qui en
    propose est un bug.
 
 ---

@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:easy_transport/main.dart';
+import 'package:carlinq/main.dart';
 
 void main() {
   testWidgets('Splash screen builds', (WidgetTester tester) async {
-    await tester.pumpWidget(const EasyTransportApp());
-    expect(find.text('EasyTransport'), findsWidgets);
+    await tester.pumpWidget(const CarlinqApp());
+    expect(find.text('Carlinq'), findsWidgets);
   });
 }

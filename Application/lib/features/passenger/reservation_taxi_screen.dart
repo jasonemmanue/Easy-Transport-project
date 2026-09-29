@@ -26,7 +26,7 @@ class _ReservationTaxiScreenState extends State<ReservationTaxiScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reservation - Easy Taxi'),
+        title: const Text('Reservation - Carlinq Taxi'),
         backgroundColor: AppColors.taxiOrange,
         foregroundColor: Colors.white,
       ),

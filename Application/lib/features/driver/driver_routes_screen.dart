@@ -32,7 +32,7 @@ class DriverRoutesScreen extends StatelessWidget {
                   Row(children: const [
                     Icon(Icons.local_taxi, color: AppColors.taxiOrange),
                     SizedBox(width: 6),
-                    Text('Zones de stationnement Easy Taxi',
+                    Text('Zones de stationnement Carlinq Taxi',
                         style: TextStyle(fontWeight: FontWeight.w800)),
                   ]),
                   const SizedBox(height: 10),

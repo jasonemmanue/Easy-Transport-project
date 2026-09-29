@@ -9,8 +9,8 @@ public/
 ├── favicon.ico
 ├── icon.svg · apple-touch-icon.png
 ├── logo/
-│   ├── easytransport.svg          Logo complet (thème clair)
-│   ├── easytransport-dark.svg     Variante sombre
+│   ├── carlinq.svg          Logo complet (thème clair)
+│   ├── carlinq-dark.svg     Variante sombre
 │   └── mark.svg                   Symbole seul (sidebar réduite)
 ├── illustrations/
 │   ├── empty-state.svg            Liste vide
@@ -53,8 +53,8 @@ Ils sont chargés par les composants de `src/components/map/`. Les couleurs suiv
 
 | Marqueur | Couleur |
 |---|---|
-| Chauffeur Easy Flexible | `#0D47A1` |
-| Chauffeur Easy Taxi | `#BF360C` |
+| Chauffeur Carlinq Flexible | `#0D47A1` |
+| Chauffeur Carlinq Taxi | `#BF360C` |
 | **Arrêt intermédiaire** | **`#0277BD`** |
 | Zone de stationnement | `#BF360C` |
 | Pause Arrêt en cours | violet |

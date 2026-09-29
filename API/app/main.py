@@ -8,10 +8,10 @@ app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
     description=(
-        "API REST EasyTransport v1.2 - Marketplace bi-mode Easy Flexible + Easy Taxi. "
+        "API REST Carlinq v1.2 - Marketplace bi-mode Carlinq Flexible + Carlinq Taxi. "
         "Endpoints : authentification, chauffeurs (Drivers & Copilote), passagers, "
         "reservations, tarification (arrets, embouteillage, pause arret, route degradee), "
-        "wallet Mobile Money, zones Easy Taxi, administration."
+        "wallet Mobile Money, zones Carlinq Taxi, administration."
     ),
 )
 

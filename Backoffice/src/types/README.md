@@ -37,7 +37,7 @@ types/
 - **Dates** : `string` ISO 8601 UTC, suffixe `At` (`createdAt`, `effectiveFrom`).
 - **Géométries** : GeoJSON (`GeoPoint`, `GeoLineString`).
 - Les unions sont des `type`, pas des `enum` TypeScript :
-  `type RideMode = 'easy_flexible' | 'easy_taxi'`.
+  `type RideMode = 'carlinq_flexible' | 'carlinq_taxi'`.
 
 ## Types dérivés de zod
 
@@ -58,18 +58,18 @@ jamais.
 Le typage doit rendre les états impossibles… impossibles.
 
 ```ts
-// ✓ la classe n'existe qu'en Easy Flexible
+// ✓ la classe n'existe qu'en Carlinq Flexible
 type RideModeInfo =
-  | { mode: 'easy_flexible'; serviceClass: ServiceClass }
-  | { mode: 'easy_taxi';     serviceClass?: never };
+  | { mode: 'carlinq_flexible'; serviceClass: ServiceClass }
+  | { mode: 'carlinq_taxi';     serviceClass?: never };
 
-// ✗ à éviter : laisse écrire { mode: 'easy_taxi', serviceClass: 'prestige' }
+// ✗ à éviter : laisse écrire { mode: 'carlinq_taxi', serviceClass: 'prestige' }
 interface Bad { mode: RideMode; serviceClass: ServiceClass | null }
 ```
 
 Même approche pour la configuration tarifaire : les clés de `stopPricing` sont typées comme
-`` `easy_flexible:${ServiceClass}` | 'easy_taxi' ``, ce qui rend impossible l'écriture d'une clé
-`easy_taxi:eco`.
+`` `carlinq_flexible:${ServiceClass}` | 'carlinq_taxi' ``, ce qui rend impossible l'écriture d'une clé
+`carlinq_taxi:eco`.
 
 ## Règles
 
@@ -84,7 +84,7 @@ Même approche pour la configuration tarifaire : les clés de `stopPricing` sont
 ## Partage avec les Cloud Functions
 
 Les Cloud Functions sont écrites en **TypeScript**. À terme, les types du schéma Firestore et les
-schémas zod devraient vivre dans un paquet partagé (`@easytransport/shared`) consommé par le
+schémas zod devraient vivre dans un paquet partagé (`@carlinq/shared`) consommé par le
 panneau **et** par les Functions — une seule définition, deux consommateurs. La structure de ce
 dossier est déjà alignée sur cette perspective : un fichier par domaine, pas de type transverse
 fourre-tout.

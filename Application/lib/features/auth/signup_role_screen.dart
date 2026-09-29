@@ -233,7 +233,7 @@ class _RoleComparison extends StatelessWidget {
           title: 'Drivers',
           color: AppColors.driversRole,
           points: const [
-            'Chauffeur affilie EasyTransport',
+            'Chauffeur affilie Carlinq',
             'Recoit les commandes automatiquement',
             'Commission 8% par course',
             'Systeme de points, quota refus',

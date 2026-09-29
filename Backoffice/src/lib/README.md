@@ -142,7 +142,7 @@ export const trafficPricingSchema = z.object({
 ```
 
 Les contraintes métier du cahier des charges vivent ici : ordre des taux, ordre des classes,
-ordre des niveaux de route dégradée, date d'effet non passée, **absence de classe pour Easy
+ordre des niveaux de route dégradée, date d'effet non passée, **absence de classe pour Carlinq
 Taxi**.
 
 ---

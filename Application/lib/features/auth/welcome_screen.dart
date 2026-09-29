@@ -29,7 +29,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   const Text(
-                    'EasyTransport',
+                    'Carlinq',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                   ),
                 ],
@@ -41,7 +41,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Deux modes de transport, une seule application.\nEasy Flexible (dans les quartiers) et Easy Taxi (bordure de route).',
+                'Deux modes de transport, une seule application.\nCarlinq Flexible (dans les quartiers) et Carlinq Taxi (bordure de route).',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 15, color: AppColors.textSecondary, height: 1.4),
               ),

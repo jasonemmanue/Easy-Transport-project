@@ -1,4 +1,4 @@
-"""Pricing engine EasyTransport v1.2.
+"""Pricing engine Carlinq v1.2.
 
 Prix total = tarif de base + supplement arrets + supplement route degradee
              + supplement embouteillage + supplement Pause Arret

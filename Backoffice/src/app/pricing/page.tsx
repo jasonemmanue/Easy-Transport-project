@@ -25,7 +25,7 @@ export default function PricingPage() {
         </div>
 
         <div className="card p-4">
-          <h2 className="font-bold mb-3">Coefficient de classe (Easy Flexible)</h2>
+          <h2 className="font-bold mb-3">Coefficient de classe (Carlinq Flexible)</h2>
           <div className="space-y-2 text-sm">
             <Field label="Eco" placeholder="x 1.0" />
             <Field label="Serenity" placeholder="x 1.3" />

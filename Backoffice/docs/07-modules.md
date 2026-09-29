@@ -9,7 +9,7 @@ Spécification des modules imposés par la Table 17 du cahier des charges.
 **KPI temps réel : courses actives par mode/classe, revenus, incidents.**
 
 ### Cartes KPI
-- **Courses actives** : total, par mode (Easy Flexible / Easy Taxi), par classe (Eco / Serenity /
+- **Courses actives** : total, par mode (Carlinq Flexible / Carlinq Taxi), par classe (Eco / Serenity /
   Prestige)
 - **Chauffeurs en ligne** : total, par mode
 - **Revenus** : jour, semaine, mois, commission perçue (8 %)
@@ -43,7 +43,7 @@ Temps réel : voir [`05-temps-reel.md`](05-temps-reel.md).
 | **Arrêts intermédiaires actifs** | **`#0277BD`** |
 | **Pauses Arrêt en cours** (pastille + durée) | violet |
 | **Embouteillages actifs** (halo) | **`#E65100`** |
-| Zones Easy Taxi | `#BF360C` |
+| Zones Carlinq Taxi | `#BF360C` |
 | Routes dégradées | dégradé selon le niveau |
 
 ### Filtres (dans l'URL, vue partageable)
@@ -61,7 +61,7 @@ throttle de rendu à 1 image/seconde.
 
 ## 3. Gestion chauffeurs — `/drivers` (UC-AD01, UC-AD03, UC-AD11)
 
-**Liste, validation, classe (Easy Flexible), mode (Easy Taxi), points, suspension, exclusion.**
+**Liste, validation, classe (Carlinq Flexible), mode (Carlinq Taxi), points, suspension, exclusion.**
 
 ### Liste
 Colonnes : nom · téléphone (masqué) · **mode** · **classe** · statut de validation · **points** ·
@@ -83,7 +83,7 @@ Tri et pagination **côté serveur**.
    **exclusion définitive** (double confirmation)
 
 ### Règles d'interface
-- La **classe n'existe qu'en Easy Flexible**. En Easy Taxi, la section est absente.
+- La **classe n'existe qu'en Carlinq Flexible**. En Carlinq Taxi, la section est absente.
 - L'attribution de classe se fait après **inspection du véhicule** ; le champ « notes
   d'inspection » est obligatoire.
 - Un chauffeur ne « change » pas de classe : il **repostule**, l'admin valide.
@@ -113,7 +113,7 @@ L'interface affiche explicitement où en est le passager dans l'échelle de sanc
 
 ---
 
-## 5. Zones Easy Taxi — `/zones` (UC-AD04)
+## 5. Zones Carlinq Taxi — `/zones` (UC-AD04)
 
 **CRUD des zones bordure de route, géolocalisation sur carte.**
 
@@ -127,7 +127,7 @@ statut actif.
 ### Règles
 - La zone est un **point de ramassage fixe en bordure de route** : l'interface avertit si le point
   tombe manifestement à l'intérieur d'un îlot résidentiel.
-- Le **quartier** est obligatoire : il sert à résoudre le **retour maison Easy Taxi**.
+- Le **quartier** est obligatoire : il sert à résoudre le **retour maison Carlinq Taxi**.
 - Suppression impossible si des courses actives référencent la zone (`ZONE_IN_USE`) →
   proposer la **désactivation** à la place.
 - Statistiques par zone : chauffeurs présents, courses des 7 derniers jours.
@@ -155,7 +155,7 @@ finale) ou **rejeter** (motif obligatoire).
 
 ### Règles
 - Un signalement `pending` **n'influence aucun prix**. Seule l'approbation crée un tronçon.
-- Le supplément route dégradée est **exclusif à Easy Flexible**.
+- Le supplément route dégradée est **exclusif à Carlinq Flexible**.
 - Avertissement si le nouveau tronçon recouvre un segment existant
   (`ROAD_SEGMENT_OVERLAPS`).
 - Mesure d'impact affichée : nombre de courses concernées sur 30 jours.
@@ -167,7 +167,7 @@ finale) ou **rejeter** (motif obligatoire).
 **Configuration du supplément par arrêt (montant, par mode, par classe), quota d'arrêts
 impromptus.**
 
-Quatre segments : Easy Flexible Eco / Serenity / Prestige, et Easy Taxi (sans classe).
+Quatre segments : Carlinq Flexible Eco / Serenity / Prestige, et Carlinq Taxi (sans classe).
 Trois montants par segment : **1ᵉʳ arrêt**, **arrêts suivants**, **Pause Arrêt**.
 Plus le **quota maximum d'arrêts impromptus par course (UC-AD16)**.
 
@@ -338,7 +338,7 @@ Rôle `moderator` : accès complet à ce module.
 | UC-AD01 Comptes chauffeurs | Gestion chauffeurs |
 | UC-AD02 Comptes passagers | Gestion passagers |
 | UC-AD03 Points manuels | Gestion chauffeurs → onglet Points |
-| UC-AD04 Zones Easy Taxi | Zones |
+| UC-AD04 Zones Carlinq Taxi | Zones |
 | UC-AD05 Routes dégradées | Routes dégradées |
 | UC-AD06 Analytics temps réel | Dashboard + Carte en direct |
 | UC-AD07 Modération | Modération |

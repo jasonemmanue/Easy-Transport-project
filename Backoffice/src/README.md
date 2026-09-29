@@ -62,7 +62,7 @@ hydratation TanStack Query (`HydrationBoundary`) pour éviter un double chargeme
 7. Données serveur stockées dans Zustand, ou `firebase-admin` importé dans un Client Component
 8. Tri, filtre ou pagination d'une grande liste en mémoire
 9. Token en `localStorage`
-10. Champ de classe de service ou de supplément route dégradée pour **Easy Taxi**
+10. Champ de classe de service ou de supplément route dégradée pour **Carlinq Taxi**
 11. Auto-save sur un écran de configuration tarifaire
 
 ## Ajouter un module
@@ -84,4 +84,4 @@ hydratation TanStack Query (`HydrationBoundary`) pour éviter un double chargeme
 
 1. **Le panneau configure, les Cloud Functions calculent.**
 2. **Aucune valeur tarifaire ne change sans aperçu d'impact, date d'effet, confirmation et audit.**
-3. **Easy Taxi n'a ni classe de service, ni supplément route dégradée.**
+3. **Carlinq Taxi n'a ni classe de service, ni supplément route dégradée.**

@@ -7,12 +7,12 @@ class PassengerHistoryScreen extends StatelessWidget {
 
   static const _history = [
     _Trip('Aujourd\'hui 08:12', 'Domicile', 'Marche Central',
-        'Easy Flexible - Serenity', 2350, 4.9),
-    _Trip('Hier 18:45', 'Bureau', 'Domicile', 'Easy Taxi', 1800, 4.7),
-    _Trip('Lun. 07:30', 'Domicile', 'Ecole', 'Easy Flexible - Eco', 1500, 5.0),
-    _Trip('Dim. 14:00', 'Restaurant', 'Aeroport', 'Easy Flexible - Prestige',
+        'Carlinq Flexible - Serenity', 2350, 4.9),
+    _Trip('Hier 18:45', 'Bureau', 'Domicile', 'Carlinq Taxi', 1800, 4.7),
+    _Trip('Lun. 07:30', 'Domicile', 'Ecole', 'Carlinq Flexible - Eco', 1500, 5.0),
+    _Trip('Dim. 14:00', 'Restaurant', 'Aeroport', 'Carlinq Flexible - Prestige',
         6500, 4.8),
-    _Trip('Ven. 09:15', 'Domicile', 'Hopital', 'Easy Taxi', 2100, 4.6),
+    _Trip('Ven. 09:15', 'Domicile', 'Hopital', 'Carlinq Taxi', 2100, 4.6),
   ];
 
   @override

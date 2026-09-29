@@ -12,7 +12,7 @@ components/
 ├── charts/       Recharts encapsulés, thèmes clair et sombre
 ├── map/          Google Maps : carte en direct, éditeur de zones, éditeur de tronçons
 ├── forms/        Champs métier : MoneyInput, PercentInput, DurationInput, SpeedInput
-└── domain/       Composants métier EasyTransport
+└── domain/       Composants métier Carlinq
 ```
 
 ---
@@ -76,7 +76,7 @@ Trois usages distincts, trois composants :
 | Composant | Usage |
 |---|---|
 | `LiveMap` | Carte en direct : chauffeurs (**RTDB `/driverLocations`**), courses, arrêts actifs, Pauses Arrêt, embouteillages. Regroupement de marqueurs, mises à jour **différentielles**, throttle de rendu |
-| `ZoneEditorMap` | CRUD des zones Easy Taxi : pose et déplacement de points |
+| `ZoneEditorMap` | CRUD des zones Carlinq Taxi : pose et déplacement de points |
 | `RoadSegmentMap` | Routes dégradées : dessin et édition de `LineString`, superposition des signalements en attente |
 | `GpsLogMap` | **Arbitrage** : trace GPS horodatée (lue dans `rides/{id}/gpsTrack/track`), bornes de la Pause Arrêt matérialisées |
 
@@ -89,8 +89,8 @@ Les géométries transitent en **GeoJSON**, stockées telles quelles dans Firest
 
 | Composant | Rôle |
 |---|---|
-| `ModeBadge` | « Easy Flexible » `#0D47A1` / « Easy Taxi » `#BF360C` |
-| `ServiceClassBadge` | Eco / Serenity / Prestige — **ne rend rien si le mode est Easy Taxi** |
+| `ModeBadge` | « Carlinq Flexible » `#0D47A1` / « Carlinq Taxi » `#BF360C` |
+| `ServiceClassBadge` | Eco / Serenity / Prestige — **ne rend rien si le mode est Carlinq Taxi** |
 | `RideStatusBadge` | Statut de course, couleur et libellé localisé |
 | `MoneyCell` | Montant XAF, `tabular-nums`, aligné à droite |
 | `PriceBreakdownTable` | Décomposition complète : base, classe, route dégradée, arrêts (ligne par ligne), Pause Arrêt, embouteillage, distance, places, total, commission, net |
@@ -113,7 +113,7 @@ Les géométries transitent en **GeoJSON**, stockées telles quelles dans Firest
    ou via un hook.
 2. **Aucune couleur littérale** : `bg-mode-flexible`, `text-traffic`, jamais `bg-[#E65100]`.
 3. **Aucune chaîne visible en dur** : `useTranslations()`.
-4. `ServiceClassBadge` et toute UI de classe **ne s'affichent jamais** en Easy Taxi.
+4. `ServiceClassBadge` et toute UI de classe **ne s'affichent jamais** en Carlinq Taxi.
 5. Les montants passent par `MoneyCell` / `MoneyInput`, jamais par un formatage local.
 6. Cibles cliquables ≥ 40 px (bureau) / 48 px (tablette).
 7. `aria-label` sur toute action à icône seule ; dialogues destructifs en `role="alertdialog"`.

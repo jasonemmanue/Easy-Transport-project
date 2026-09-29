@@ -36,8 +36,8 @@
 
 ### Configuration tarifaire (priorité absolue)
 
-- [ ] **Aucun champ de classe de service n'est proposé pour Easy Taxi**
-- [ ] **Aucun champ de supplément route dégradée pour Easy Taxi**
+- [ ] **Aucun champ de classe de service n'est proposé pour Carlinq Taxi**
+- [ ] **Aucun champ de supplément route dégradée pour Carlinq Taxi**
 - [ ] Le bouton « Enregistrer » est désactivé tant qu'aucune valeur n'a changé
 - [ ] **Aucun auto-save** : modifier un champ puis quitter la page ne change rien
 - [ ] L'aperçu d'impact est **obligatoire** avant la confirmation
@@ -71,7 +71,7 @@
 
 ### Chauffeurs
 
-- [ ] La **classe n'apparaît qu'en Easy Flexible**
+- [ ] La **classe n'apparaît qu'en Carlinq Flexible**
 - [ ] L'attribution de classe exige des notes d'inspection
 - [ ] L'interface ne propose jamais « changer de classe » — seulement une candidature
 - [ ] Un rejet de document exige un motif
@@ -267,7 +267,7 @@ Alertes à configurer :
 - [ ] Candidature de classe supérieure : acceptation puis rejet
 - [ ] Passager avec 3 plaintes → sanction 48 h, puis 7 jours, puis exclusion
 - [ ] Annulation d'une plainte infondée
-- [ ] Création, modification et désactivation d'une zone Easy Taxi
+- [ ] Création, modification et désactivation d'une zone Carlinq Taxi
 - [ ] Approbation et rejet d'un signalement de route dégradée
 - [ ] **Modification du supplément par arrêt** : aperçu, date d'effet, confirmation, audit
 - [ ] **Modification des seuils d'embouteillage** : validation des contraintes d'ordre

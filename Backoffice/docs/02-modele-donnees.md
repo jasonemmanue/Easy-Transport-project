@@ -1,7 +1,7 @@
 # 02 — Modèle de données
 
 Modèle **commun aux trois dépôts clients**. Toute modification doit être répercutée dans
-`Easy-transport-users` et `Easy-transport-Chauffeurs`.
+`Carlinq-users` et `Carlinq-Chauffeurs`.
 
 Conventions : identifiants `UUID v4` · montants **entiers XAF** (pas de décimale) · distances en
 **mètres** · durées en **secondes** · dates **ISO 8601 UTC** · géométries en **GeoJSON**.
@@ -11,8 +11,8 @@ Conventions : identifiants `UUID v4` · montants **entiers XAF** (pas de décima
 ## 1. Énumérations
 
 ```ts
-export type RideMode = 'easy_flexible' | 'easy_taxi';
-export type ServiceClass = 'eco' | 'serenity' | 'prestige';   // Easy Flexible uniquement
+export type RideMode = 'carlinq_flexible' | 'carlinq_taxi';
+export type ServiceClass = 'eco' | 'serenity' | 'prestige';   // Carlinq Flexible uniquement
 
 export type RideStatus =
   | 'searching' | 'accepted' | 'driver_arriving' | 'driver_arrived' | 'in_progress'
@@ -67,7 +67,7 @@ export type UserStatus = 'active' | 'suspended' | 'banned' | 'pending_verificati
 | `id` | string | |
 | `firstName`, `lastName`, `phone`, `email` | string | **masqués par défaut** dans les listes |
 | `mode` | RideMode | |
-| `serviceClass` | ServiceClass \| null | non null **si et seulement si** `easy_flexible` |
+| `serviceClass` | ServiceClass \| null | non null **si et seulement si** `carlinq_flexible` |
 | `validationStatus` | DriverValidationStatus | |
 | `points` | number | seuil de suspension : **< 20** |
 | `rating`, `ratingCount` | number | |
@@ -98,13 +98,13 @@ export type UserStatus = 'active' | 'suspended' | 'banned' | 'pending_verificati
 Les cinq documents obligatoires — identité, permis, carte grise, assurance, photo véhicule —
 doivent être `approved` pour activer le compte.
 
-### 2.4 `ParkingZone` — zone Easy Taxi (CRUD admin)
+### 2.4 `ParkingZone` — zone Carlinq Taxi (CRUD admin)
 
 | Champ | Type | Notes |
 |---|---|---|
 | `id` | string | |
 | `name` | string | ex. « Carrefour Nkolbisson » |
-| `quarter`, `city` | string | le quartier sert au retour maison Easy Taxi |
+| `quarter`, `city` | string | le quartier sert au retour maison Carlinq Taxi |
 | `latitude`, `longitude` | number | **point en bordure de route** |
 | `capacity` | number | |
 | `isActive` | boolean | |
@@ -177,7 +177,7 @@ interface PricingConfig {
   maxSeatsPerBooking: number;             // 4
   maxPauseStopsPerRide: number;           // N — UC-AD16
   classCoefficients: Record<ServiceClass, number>;      // eco 1.0, serenity 1.3, prestige 1.7
-  baseRatePerKmXaf: Record<string, number>;             // "easy_flexible:eco" | "easy_taxi"
+  baseRatePerKmXaf: Record<string, number>;             // "carlinq_flexible:eco" | "carlinq_taxi"
   degradedRoadPercent: Record<RoadQuality, number>;     // 0 / .05 / .10 / .15
   stopPricing: Record<string, StopPricing>;             // clé = mode[:classe]
   trafficPricing: TrafficPricing;
@@ -215,7 +215,7 @@ interface GoalTier { targetRides: number; bonusXaf: number; bonusPoints: number;
 ```
 
 **Invariant d'interface** : `stopPricing` et `baseRatePerKmXaf` n'ont **jamais** de clé de classe
-pour `easy_taxi`, et `degradedRoadPercent` ne s'applique **jamais** à `easy_taxi`.
+pour `carlinq_taxi`, et `degradedRoadPercent` ne s'applique **jamais** à `carlinq_taxi`.
 
 ### 2.9 `AuditLog`
 
@@ -255,16 +255,16 @@ leur propre visualisation.
 
 `Ride`, `RideStop`, `PauseStop`, `TrafficEvent`, `PriceBreakdown`, `Wallet`,
 `WalletTransaction`, `Message`, `Rating` — identiques aux dépôts mobiles. Voir
-`Easy-transport-users/docs/02-modele-donnees.md`.
+`Carlinq-users/docs/02-modele-donnees.md`.
 
 Rappel de `PriceBreakdown`, l'objet que l'admin consulte le plus :
 
 ```ts
 interface PriceBreakdown {
   baseFareXaf: number;
-  classCoefficient: number;        // 1.0 / 1.3 / 1.7 — 1.0 en Easy Taxi
+  classCoefficient: number;        // 1.0 / 1.3 / 1.7 — 1.0 en Carlinq Taxi
   classAdjustmentXaf: number;
-  roadQuality: RoadQuality;        // Easy Flexible uniquement
+  roadQuality: RoadQuality;        // Carlinq Flexible uniquement
   degradedRoadPercent: number;
   degradedRoadSupplementXaf: number;
   stopsSupplementXaf: number;
@@ -328,8 +328,8 @@ L'admin peut ANNULER une plainte infondée → décrémente confirmedComplaints
 
 ## 5. Invariants métier à faire respecter par l'interface
 
-1. `serviceClass != null` ⟺ `mode == 'easy_flexible'`.
-2. Aucun supplément route dégradée pour `easy_taxi`.
+1. `serviceClass != null` ⟺ `mode == 'carlinq_flexible'`.
+2. Aucun supplément route dégradée pour `carlinq_taxi`.
 3. `1 <= seats <= 4`.
 4. `commissionXaf == round(totalXaf * commissionRate)`.
 5. `totalXaf == unitTotalXaf * seats`.

@@ -23,7 +23,7 @@ export default function AnalyticsPage() {
           <Bar label="Eco" value={42} color="bg-brand-eco" />
           <Bar label="Serenity" value={27} color="bg-brand-serenity" />
           <Bar label="Prestige" value={12} color="bg-brand-prestige" />
-          <Bar label="Easy Taxi" value={19} color="bg-brand-taxi" />
+          <Bar label="Carlinq Taxi" value={19} color="bg-brand-taxi" />
         </div>
       </div>
 

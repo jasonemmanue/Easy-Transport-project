@@ -1,6 +1,6 @@
-# EasyTransport - Backoffice (Next.js 14)
+# Carlinq - Backoffice (Next.js 14)
 
-Panneau d'administration web responsive pour la plateforme EasyTransport.
+Panneau d'administration web responsive pour la plateforme Carlinq.
 
 ## Modules
 
@@ -9,7 +9,7 @@ Panneau d'administration web responsive pour la plateforme EasyTransport.
 - Gestion des chauffeurs Drivers
 - Gestion des Copilote (chauffeurs indépendants / sociétés / cota Pack Premium)
 - Gestion des passagers
-- Zones de stationnement Easy Taxi (CRUD)
+- Zones de stationnement Carlinq Taxi (CRUD)
 - Base de données des routes dégradées (validation signalements)
 - Tarifs & Supplements (arrêts, embouteillage, classes, route dégradée)
 - Litiges Pause Arrêt (arbitrage)
@@ -35,7 +35,7 @@ src/
 │   ├── drivers/              # Drivers
 │   ├── copilotes/            # Sociétés / indépendants
 │   ├── passengers/
-│   ├── zones/                # Easy Taxi
+│   ├── zones/                # Carlinq Taxi
 │   ├── routes/               # Routes dégradées
 │   ├── pricing/
 │   ├── disputes/             # Litiges Pause Arrêt

@@ -4,7 +4,7 @@ import '../models/user_role.dart';
 
 class AppState extends ChangeNotifier {
   UserRole? _role;
-  EasyMode _mode = EasyMode.flexible;
+  CarlinqMode _mode = CarlinqMode.flexible;
   ServiceClass _serviceClass = ServiceClass.eco;
   ThemeMode _themeMode = ThemeMode.light;
   Locale _locale = const Locale('fr');
@@ -14,7 +14,7 @@ class AppState extends ChangeNotifier {
   int _weeklyProgress = 32;
 
   UserRole? get role => _role;
-  EasyMode get mode => _mode;
+  CarlinqMode get mode => _mode;
   ServiceClass get serviceClass => _serviceClass;
   ThemeMode get themeMode => _themeMode;
   Locale get locale => _locale;
@@ -28,7 +28,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setMode(EasyMode m) {
+  void setMode(CarlinqMode m) {
     _mode = m;
     notifyListeners();
   }

@@ -2,11 +2,11 @@ import Shell from "@/components/Shell";
 import { Car, Check, Ban } from "lucide-react";
 
 const drivers = [
-  { name: "Kevin Kamga", plate: "LT 8342", mode: "Easy Flexible", class: "Serenity", points: 82, rides: 612, status: "Actif" },
-  { name: "Nadege Bikoro", plate: "CE 4210", mode: "Easy Taxi", class: "-", points: 74, rides: 421, status: "Actif" },
-  { name: "Yves Sami", plate: "LT 9990", mode: "Easy Flexible", class: "Eco", points: 91, rides: 894, status: "Actif" },
-  { name: "Prisca Longue", plate: "LT 1231", mode: "Easy Flexible", class: "Prestige", points: 18, rides: 45, status: "Suspendu" },
-  { name: "Ekue Amougou", plate: "CE 5522", mode: "Easy Taxi", class: "-", points: 67, rides: 220, status: "Validation" },
+  { name: "Kevin Kamga", plate: "LT 8342", mode: "Carlinq Flexible", class: "Serenity", points: 82, rides: 612, status: "Actif" },
+  { name: "Nadege Bikoro", plate: "CE 4210", mode: "Carlinq Taxi", class: "-", points: 74, rides: 421, status: "Actif" },
+  { name: "Yves Sami", plate: "LT 9990", mode: "Carlinq Flexible", class: "Eco", points: 91, rides: 894, status: "Actif" },
+  { name: "Prisca Longue", plate: "LT 1231", mode: "Carlinq Flexible", class: "Prestige", points: 18, rides: 45, status: "Suspendu" },
+  { name: "Ekue Amougou", plate: "CE 5522", mode: "Carlinq Taxi", class: "-", points: 67, rides: 220, status: "Validation" },
 ];
 
 export default function DriversPage() {

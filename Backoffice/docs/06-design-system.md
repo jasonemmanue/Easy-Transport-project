@@ -9,8 +9,8 @@ d'administration **responsive**.
 
 | Rôle | Hex | Token Tailwind |
 |---|---|---|
-| **Easy Flexible** | `#0D47A1` | `mode-flexible` |
-| **Easy Taxi** | `#BF360C` | `mode-taxi` |
+| **Carlinq Flexible** | `#0D47A1` | `mode-flexible` |
+| **Carlinq Taxi** | `#BF360C` | `mode-taxi` |
 | **Classe Eco** | `#388E3C` | `class-eco` |
 | **Classe Serenity** | `#1565C0` | `class-serenity` |
 | **Classe Prestige** | `#F57F17` | `class-prestige` |
@@ -111,8 +111,8 @@ temps réel change.
 
 | Concept | Icône |
 |---|---|
-| Easy Flexible | `Car` |
-| Easy Taxi | `CarTaxiFront` |
+| Carlinq Flexible | `Car` |
+| Carlinq Taxi | `CarTaxiFront` |
 | Arrêt intermédiaire | `MapPinPlus` |
 | Pause Arrêt | `CirclePause` |
 | Embouteillage | `TrafficCone` |
@@ -134,8 +134,8 @@ temps réel change.
 
 | Composant | Description |
 |---|---|
-| `ModeBadge` | « Easy Flexible » / « Easy Taxi » aux couleurs imposées |
-| `ServiceClassBadge` | Eco / Serenity / Prestige — **jamais rendu si le mode est Easy Taxi** |
+| `ModeBadge` | « Carlinq Flexible » / « Carlinq Taxi » aux couleurs imposées |
+| `ServiceClassBadge` | Eco / Serenity / Prestige — **jamais rendu si le mode est Carlinq Taxi** |
 | `RideStatusBadge` | Statut de course, couleur et libellé localisé |
 | `MoneyCell` | Montant XAF, `tabular-nums`, alignement à droite |
 | `PriceBreakdownTable` | Décomposition complète d'une course, ligne par ligne |
@@ -184,7 +184,7 @@ design le reflète :
    « CONFIRMER ».
 6. **Date d'effet** visible et obligatoire.
 7. Lien permanent vers l'**historique des modifications** de la section.
-8. Les sections **Easy Taxi** n'affichent **jamais** de sélecteur de classe ni de champ « route
+8. Les sections **Carlinq Taxi** n'affichent **jamais** de sélecteur de classe ni de champ « route
    dégradée ».
 
 ---
@@ -257,7 +257,7 @@ Chaque segment de route a son `loading.tsx` et son `error.tsx`.
 
 | Français | Anglais |
 |---|---|
-| Easy Flexible / Easy Taxi | *(marques, non traduites)* |
+| Carlinq Flexible / Carlinq Taxi | *(marques, non traduites)* |
 | Eco / Serenity / Prestige | *(marques, non traduites)* |
 | Arrêt intermédiaire | Intermediate stop |
 | Pause Arrêt | Stop Pause |

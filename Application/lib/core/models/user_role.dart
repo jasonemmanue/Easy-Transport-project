@@ -21,14 +21,14 @@ extension UserRoleX on UserRole {
       case UserRole.passenger:
         return 'Reservez une course en un tap, suivez le chauffeur en temps reel.';
       case UserRole.drivers:
-        return 'Recevez des commandes et gagnez de l\'argent avec EasyTransport.';
+        return 'Recevez des commandes et gagnez de l\'argent avec Carlinq.';
       case UserRole.copilote:
         return 'Chauffeurs independants et societes de transport - payez le cota et travaillez.';
     }
   }
 }
 
-enum EasyMode {
+enum CarlinqMode {
   flexible,  // Entre dans les quartiers (3 classes)
   taxi,      // Points fixes en bordure de route
 }

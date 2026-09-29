@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Charte graphique officielle EasyTransport (Cahier des charges v1.2 - Table 18).
+/// Charte graphique officielle Carlinq (Cahier des charges v1.2 - Table 18).
 class AppColors {
   AppColors._();
 

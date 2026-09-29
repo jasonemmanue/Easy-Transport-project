@@ -12,7 +12,7 @@ const nav = [
   { href: "/drivers", label: "Chauffeurs (Drivers)", icon: Car },
   { href: "/copilotes", label: "Copilote (societes)", icon: ShieldCheck },
   { href: "/passengers", label: "Passagers", icon: Users },
-  { href: "/zones", label: "Zones Easy Taxi", icon: MapPin },
+  { href: "/zones", label: "Zones Carlinq Taxi", icon: MapPin },
   { href: "/routes", label: "Routes degradees", icon: Route },
   { href: "/pricing", label: "Tarifs & Supplements", icon: DollarSign },
   { href: "/disputes", label: "Litiges Pause Arret", icon: MessageSquareWarning },
@@ -29,7 +29,7 @@ export default function Sidebar() {
       <div className="flex items-center gap-2 mb-6">
         <div className="w-9 h-9 rounded-lg bg-brand-flexible flex items-center justify-center text-white font-bold">E</div>
         <div>
-          <p className="font-extrabold">EasyTransport</p>
+          <p className="font-extrabold">Carlinq</p>
           <p className="text-[11px] text-slate-500">Panneau administrateur</p>
         </div>
       </div>

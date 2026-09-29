@@ -1,4 +1,4 @@
-# CLAUDE.md - API EasyTransport (FastAPI)
+# CLAUDE.md - API Carlinq (FastAPI)
 
 Contexte pour Claude Code dans `API/`.
 
@@ -20,12 +20,12 @@ Backend REST + WebSockets pour l'application mobile Flutter (`/Application`) et 
 2. **Rides** - moteur de tarification :
    - Base = distance × tarif/km × coefficient classe.
    - Supplement par arrêt configurable.
-   - Route dégradée +5/+10/+15% en Easy Flexible.
+   - Route dégradée +5/+10/+15% en Carlinq Flexible.
    - Embouteillage : chronomètre serveur (source de vérité).
    - Pause Arrêt : logs GPS conservés pour arbitrage admin.
 3. **Drivers** - Drivers (affiliés) vs Copilote (indépendants/sociétés, cota Pack Premium 5 000 XAF/mois).
 4. **Wallet** - solde minimum 500 XAF, top-up Orange Money / MTN MoMo (Phase 2).
-5. **Zones Easy Taxi** - CRUD géolocalisé par quartier.
+5. **Zones Carlinq Taxi** - CRUD géolocalisé par quartier.
 6. **Admin** - dashboard KPIs, litiges, tarification runtime.
 
 ## Règles à ne pas violer

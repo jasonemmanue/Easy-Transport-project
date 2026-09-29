@@ -6,11 +6,11 @@ import 'core/theme/app_theme.dart';
 import 'features/auth/splash_screen.dart';
 
 void main() {
-  runApp(const EasyTransportApp());
+  runApp(const CarlinqApp());
 }
 
-class EasyTransportApp extends StatelessWidget {
-  const EasyTransportApp({super.key});
+class CarlinqApp extends StatelessWidget {
+  const CarlinqApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +18,7 @@ class EasyTransportApp extends StatelessWidget {
       create: (_) => AppState(),
       child: Consumer<AppState>(
         builder: (context, app, _) => MaterialApp(
-          title: 'EasyTransport',
+          title: 'Carlinq',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),

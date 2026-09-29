@@ -271,7 +271,7 @@ class _IncomingOrderCard extends StatelessWidget {
                 decoration: BoxDecoration(
                     color: AppColors.classEco,
                     borderRadius: BorderRadius.circular(10)),
-                child: const Text('Easy Flexible - Eco',
+                child: const Text('Carlinq Flexible - Eco',
                     style:
                         TextStyle(color: Colors.white, fontSize: 11)),
               ),

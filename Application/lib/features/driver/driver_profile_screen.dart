@@ -48,7 +48,7 @@ class DriverProfileScreen extends StatelessWidget {
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.w800)),
-                      Text('${role?.label ?? 'Chauffeur'} - Easy Flexible - Serenity',
+                      Text('${role?.label ?? 'Chauffeur'} - Carlinq Flexible - Serenity',
                           style:
                               const TextStyle(color: Colors.white70)),
                       const SizedBox(height: 4),

@@ -14,7 +14,7 @@ class UserRole(str, Enum):
     admin = "admin"
 
 
-class EasyMode(str, Enum):
+class CarlinqMode(str, Enum):
     flexible = "flexible"
     taxi = "taxi"
 
@@ -54,7 +54,7 @@ class Driver(Base):
     __tablename__ = "drivers"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
-    mode: Mapped[EasyMode] = mapped_column(SAEnum(EasyMode))
+    mode: Mapped[CarlinqMode] = mapped_column(SAEnum(CarlinqMode))
     service_class: Mapped[ServiceClass | None] = mapped_column(SAEnum(ServiceClass), nullable=True)
     vehicle_brand: Mapped[str] = mapped_column(String(80))
     vehicle_model: Mapped[str] = mapped_column(String(80))
@@ -94,7 +94,7 @@ class Ride(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     passenger_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     driver_id: Mapped[int | None] = mapped_column(ForeignKey("drivers.id"), nullable=True)
-    mode: Mapped[EasyMode] = mapped_column(SAEnum(EasyMode))
+    mode: Mapped[CarlinqMode] = mapped_column(SAEnum(CarlinqMode))
     service_class: Mapped[ServiceClass | None] = mapped_column(SAEnum(ServiceClass), nullable=True)
     status: Mapped[RideStatus] = mapped_column(SAEnum(RideStatus), default=RideStatus.pending)
     places: Mapped[int] = mapped_column(Integer, default=1)

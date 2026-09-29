@@ -31,7 +31,7 @@ class PassengerHomeScreen extends StatelessWidget {
               child: Image.asset('assets/images/logo.png'),
             ),
             const SizedBox(width: 8),
-            const Text('EasyTransport',
+            const Text('Carlinq',
                 style: TextStyle(fontWeight: FontWeight.w800)),
           ],
         ),
@@ -55,12 +55,12 @@ class PassengerHomeScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: _ModeTile(
-                  title: 'Easy Flexible',
+                  title: 'Carlinq Flexible',
                   subtitle: 'Dans les quartiers',
                   icon: Icons.map_outlined,
                   color: AppColors.flexibleBlue,
                   onTap: () {
-                    context.read<AppState>().setMode(EasyMode.flexible);
+                    context.read<AppState>().setMode(CarlinqMode.flexible);
                     Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => const ReservationFlexibleScreen()));
                   },
@@ -69,12 +69,12 @@ class PassengerHomeScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _ModeTile(
-                  title: 'Easy Taxi',
+                  title: 'Carlinq Taxi',
                   subtitle: 'Bordure de route',
                   icon: Icons.local_taxi_outlined,
                   color: AppColors.taxiOrange,
                   onTap: () {
-                    context.read<AppState>().setMode(EasyMode.taxi);
+                    context.read<AppState>().setMode(CarlinqMode.taxi);
                     Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => const ReservationTaxiScreen()));
                   },

@@ -57,10 +57,10 @@ export default function Dashboard() {
         <div className="card p-4">
           <h2 className="font-bold mb-3">Repartition mode / classe</h2>
           <ul className="space-y-3 text-sm">
-            <Row label="Easy Flexible - Eco" value="42%" color="bg-brand-eco" />
-            <Row label="Easy Flexible - Serenity" value="27%" color="bg-brand-serenity" />
-            <Row label="Easy Flexible - Prestige" value="12%" color="bg-brand-prestige" />
-            <Row label="Easy Taxi" value="19%" color="bg-brand-taxi" />
+            <Row label="Carlinq Flexible - Eco" value="42%" color="bg-brand-eco" />
+            <Row label="Carlinq Flexible - Serenity" value="27%" color="bg-brand-serenity" />
+            <Row label="Carlinq Flexible - Prestige" value="12%" color="bg-brand-prestige" />
+            <Row label="Carlinq Taxi" value="19%" color="bg-brand-taxi" />
           </ul>
           <div className="mt-6">
             <h3 className="font-bold text-sm mb-2">Alertes en cours</h3>

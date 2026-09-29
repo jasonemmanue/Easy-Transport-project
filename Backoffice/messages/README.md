@@ -26,7 +26,7 @@ Organisée par module, en miroir de la sidebar :
   "nav": {
     "dashboard": "Tableau de bord", "liveMap": "Carte en direct",
     "drivers": "Chauffeurs", "passengers": "Passagers",
-    "zones": "Zones Easy Taxi", "degradedRoads": "Routes dégradées",
+    "zones": "Zones Carlinq Taxi", "degradedRoads": "Routes dégradées",
     "pricingStops": "Tarifs arrêts", "pricingTraffic": "Tarifs embouteillage",
     "disputes": "Litiges Pause Arrêt", "goalsBonuses": "Objectifs & Bonus",
     "finances": "Finances", "notifications": "Notifications",
@@ -103,7 +103,7 @@ Identique dans les trois applications — une divergence est un bug de spécific
 
 | Français | Anglais |
 |---|---|
-| Easy Flexible / Easy Taxi | *(marques, non traduites)* |
+| Carlinq Flexible / Carlinq Taxi | *(marques, non traduites)* |
 | Eco / Serenity / Prestige | *(marques, non traduites)* |
 | Arrêt intermédiaire | Intermediate stop |
 | **Pause Arrêt** | **Stop Pause** |

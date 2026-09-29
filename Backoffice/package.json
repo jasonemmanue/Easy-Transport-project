@@ -1,8 +1,8 @@
 {
-  "name": "easytransport-backoffice",
+  "name": "carlinq-backoffice",
   "version": "1.0.0",
   "private": true,
-  "description": "Panneau d'administration Next.js pour EasyTransport (bi-mode Easy Flexible + Easy Taxi).",
+  "description": "Panneau d'administration Next.js pour Carlinq (bi-mode Carlinq Flexible + Carlinq Taxi).",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

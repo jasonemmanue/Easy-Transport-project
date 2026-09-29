@@ -9,7 +9,7 @@ const zones = [
 
 export default function ZonesPage() {
   return (
-    <Shell title="Zones Easy Taxi">
+    <Shell title="Zones Carlinq Taxi">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {zones.map((z) => (
           <div key={z.name} className="card p-4">

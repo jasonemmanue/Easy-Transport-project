@@ -12,7 +12,7 @@ hooks/
 ├── use-drivers.ts         Liste, détail, documents, validation, points, sanctions
 ├── use-passengers.ts      Liste, détail, plaintes, sanctions, portefeuille
 ├── use-rides.ts           Recherche, détail, logs GPS
-├── use-zones.ts           CRUD des zones Easy Taxi
+├── use-zones.ts           CRUD des zones Carlinq Taxi
 ├── use-degraded-roads.ts  Base + signalements chauffeurs
 ├── use-pricing.ts         ⚠️ configuration tarifaire + aperçu d'impact
 ├── use-disputes.ts        File d'arbitrage, dossier, résolution

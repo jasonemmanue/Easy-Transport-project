@@ -9,7 +9,7 @@ le prix payé par les passagers et les revenus des chauffeurs, et les garde-fous
 
 > **Casse des clés** — toutes les clés de `config/pricing` sont en **camelCase**, à l'identique de
 > [`03-api-contract.md`](03-api-contract.md) §3, qui fait foi. Les valeurs d'énumération
-> (`easy_flexible`, `easy_taxi`, `partially_degraded`, `super_admin`…) restent en `snake_case` :
+> (`carlinq_flexible`, `carlinq_taxi`, `partially_degraded`, `super_admin`…) restent en `snake_case` :
 > ce sont des identifiants, pas des noms de champs.
 
 ---
@@ -19,9 +19,9 @@ le prix payé par les passagers et les revenus des chauffeurs, et les garde-fous
 ```
 ① base           = distance_km × tauxKm(mode, classe)
                    la classe est DÉJÀ intégrée au taux/km
-② classe         = 0 XAF — ligne informative (badge « ×1,3 »)          [Easy Flexible]
+② classe         = 0 XAF — ligne informative (badge « ×1,3 »)          [Carlinq Flexible]
                    classCoefficients n'est JAMAIS appliqué au calcul
-③ route dégradée = % du tarif de base : 0 / +5 / +10 / +15 %           [Easy Flexible]
+③ route dégradée = % du tarif de base : 0 / +5 / +10 / +15 %           [Carlinq Flexible]
 ④ arrêts         = tarif_1er_arrêt + (n − 1) × tarif_arrêt_suivant
 ⑤ pauses arrêt   = nombre de Pause Arrêt × tarif_pause_arrêt
 ⑥ embouteillage  = minutes facturables × taux/minute (modéré ou sévère)
@@ -42,10 +42,10 @@ l'aperçu d'impact renvoyé par `adminPreviewPricing`.
 
 | Paramètre | Portée | Effet |
 |---|---|---|
-| `baseRatePerKmXaf["easy_flexible:eco"]` | Easy Flexible Eco | ① |
-| `baseRatePerKmXaf["easy_flexible:serenity"]` | Easy Flexible Serenity | ① |
-| `baseRatePerKmXaf["easy_flexible:prestige"]` | Easy Flexible Prestige | ① |
-| `baseRatePerKmXaf["easy_taxi"]` | Easy Taxi — **pas de classe** | ① |
+| `baseRatePerKmXaf["carlinq_flexible:eco"]` | Carlinq Flexible Eco | ① |
+| `baseRatePerKmXaf["carlinq_flexible:serenity"]` | Carlinq Flexible Serenity | ① |
+| `baseRatePerKmXaf["carlinq_flexible:prestige"]` | Carlinq Flexible Prestige | ① |
+| `baseRatePerKmXaf["carlinq_taxi"]` | Carlinq Taxi — **pas de classe** | ① |
 | `classCoefficients` | Eco 1,0 · Serenity 1,3 · Prestige 1,7 — **affichage et dérivation seulement** | — |
 
 > ⚠️ **`classCoefficients` n'entre pas dans le calcul du prix.** La classe est déjà intégrée à
@@ -55,8 +55,8 @@ l'aperçu d'impact renvoyé par `adminPreviewPricing`.
 > reste libre de saisir les trois taux à la main.
 
 Règles d'interface :
-- **Aucune clé de classe pour Easy Taxi.** Le formulaire n'affiche pas de sélecteur de classe dans
-  la section Easy Taxi.
+- **Aucune clé de classe pour Carlinq Taxi.** Le formulaire n'affiche pas de sélecteur de classe dans
+  la section Carlinq Taxi.
 - Modifier un coefficient **ne change aucun prix** tant que les taux/km ne sont pas régénérés :
   l'écran doit le dire explicitement et proposer la régénération en une action, avec aperçu
   d'impact.
@@ -81,7 +81,7 @@ Règles d'interface :
 | **`maxPauseStopsPerRide`** | **UC-AD16** — nombre maximum d'arrêts impromptus par course |
 
 Ces trois montants sont définis **par segment** :
-`easy_flexible:eco`, `easy_flexible:serenity`, `easy_flexible:prestige`, `easy_taxi`.
+`carlinq_flexible:eco`, `carlinq_flexible:serenity`, `carlinq_flexible:prestige`, `carlinq_taxi`.
 
 ### Ce que voit le passager
 
@@ -98,10 +98,10 @@ l'interface avertit explicitement de cette conséquence.
 
 | Segment | 1ᵉʳ arrêt | Arrêts suivants | Pause Arrêt |
 |---|---|---|---|
-| Easy Flexible Eco | 300 XAF | 200 XAF | 250 XAF |
-| Easy Flexible Serenity | 400 XAF | 250 XAF | 300 XAF |
-| Easy Flexible Prestige | 500 XAF | 350 XAF | 400 XAF |
-| Easy Taxi | 250 XAF | 150 XAF | 200 XAF |
+| Carlinq Flexible Eco | 300 XAF | 200 XAF | 250 XAF |
+| Carlinq Flexible Serenity | 400 XAF | 250 XAF | 300 XAF |
+| Carlinq Flexible Prestige | 500 XAF | 350 XAF | 400 XAF |
+| Carlinq Taxi | 250 XAF | 150 XAF | 200 XAF |
 
 ---
 
@@ -151,7 +151,7 @@ les taux raisonnables fait partie de l'équilibre du produit.
 
 ## 5. Supplément route dégradée — `/pricing/degraded-roads`
 
-**Easy Flexible uniquement.** Les chauffeurs entrent dans les quartiers ; certaines routes usent
+**Carlinq Flexible uniquement.** Les chauffeurs entrent dans les quartiers ; certaines routes usent
 prématurément les véhicules.
 
 | Qualité | Supplément | Condition |
@@ -270,18 +270,18 @@ quelles :
 
 | Course type | Détail |
 |---|---|
-| Easy Flexible Eco · 5 km · 0 arrêt · 1 place | Course la plus fréquente |
-| Easy Flexible Serenity · 7,4 km · 2 arrêts · 2 places | Course de référence du cahier des charges |
-| Easy Flexible Prestige · 12 km · 1 arrêt · 1 place | Segment haut de gamme |
-| Easy Flexible Eco · 6 km · route dégradée majoritaire | Impact du supplément route |
-| Easy Taxi · 5 km · 1 arrêt · 1 place | Mode sans classe |
-| Easy Flexible Serenity · 8 km · 1 Pause Arrêt · 10 min d'embouteillage | Suppléments dynamiques |
+| Carlinq Flexible Eco · 5 km · 0 arrêt · 1 place | Course la plus fréquente |
+| Carlinq Flexible Serenity · 7,4 km · 2 arrêts · 2 places | Course de référence du cahier des charges |
+| Carlinq Flexible Prestige · 12 km · 1 arrêt · 1 place | Segment haut de gamme |
+| Carlinq Flexible Eco · 6 km · route dégradée majoritaire | Impact du supplément route |
+| Carlinq Taxi · 5 km · 1 arrêt · 1 place | Mode sans classe |
+| Carlinq Flexible Serenity · 8 km · 1 Pause Arrêt · 10 min d'embouteillage | Suppléments dynamiques |
 
 ---
 
 ## 12. Exemple chiffré de référence
 
-Easy Flexible Serenity · 7,4 km · 2 places · 2 arrêts · 1 Pause Arrêt · 7 min d'embouteillage ·
+Carlinq Flexible Serenity · 7,4 km · 2 places · 2 arrêts · 1 Pause Arrêt · 7 min d'embouteillage ·
 40 % du trajet sur route dégradée.
 
 | Ligne | Calcul | Montant |

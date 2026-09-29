@@ -33,7 +33,7 @@ class _ReservationFlexibleScreenState
     final cls = context.watch<AppState>().serviceClass;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reservation - Easy Flexible'),
+        title: const Text('Reservation - Carlinq Flexible'),
         backgroundColor: AppColors.flexibleBlue,
         foregroundColor: Colors.white,
       ),

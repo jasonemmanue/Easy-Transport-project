@@ -1,4 +1,4 @@
-package com.easytransport.easy_transport
+package com.carlinq.app
 
 import io.flutter.embedding.android.FlutterActivity
 

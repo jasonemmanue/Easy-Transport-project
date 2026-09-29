@@ -1,4 +1,4 @@
-# CLAUDE.md - Backoffice EasyTransport (Next.js)
+# CLAUDE.md - Backoffice Carlinq (Next.js)
 
 Contexte à charger lorsque Claude Code travaille dans `Backoffice/`.
 
@@ -9,7 +9,7 @@ C'est le panneau administrateur central décrit dans le cahier des charges v1.2 
 ## Stack
 
 - Next.js 14 (App Router), React 18, TypeScript strict.
-- Tailwind CSS v3 (thème Charte graphique EasyTransport).
+- Tailwind CSS v3 (thème Charte graphique Carlinq).
 - `lucide-react` pour les icônes.
 - (À intégrer) SWR/TanStack Query pour les appels à l'API FastAPI (`/API`).
 

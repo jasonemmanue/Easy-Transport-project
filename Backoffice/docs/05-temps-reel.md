@@ -123,7 +123,7 @@ const all    = useLiveMapStore((s) => s);                   // ✗ re-rend à ch
 | **Arrêts actifs** | Arrêts intermédiaires en attente | **`#0277BD`** | Firestore `rides/{id}/stops` |
 | **Pauses Arrêt en cours** | Pastille pulsante + durée | violet | RTDB `/rideTracking/{id}/pause` |
 | **Embouteillages actifs** | Halo sur la position | **`#E65100`** | RTDB `/rideTracking/{id}/traffic` |
-| Zones Easy Taxi | Points de stationnement | `#BF360C` | Firestore `parkingZones` (chargé une fois) |
+| Zones Carlinq Taxi | Points de stationnement | `#BF360C` | Firestore `parkingZones` (chargé une fois) |
 | Routes dégradées | Tronçons colorés par niveau | dégradé | Firestore `degradedRoads` (chargé une fois) |
 
 Chaque couche est activable indépendamment ; l'état est mémorisé par administrateur. Les zones et

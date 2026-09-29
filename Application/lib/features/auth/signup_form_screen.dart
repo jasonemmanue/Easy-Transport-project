@@ -21,7 +21,7 @@ class _SignupFormScreenState extends State<SignupFormScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _accept = false;
-  String _mode = 'Easy Flexible';
+  String _mode = 'Carlinq Flexible';
   String _plaqueClass = 'Eco';
   String _companyType = 'Chauffeur independant';
 
@@ -225,10 +225,10 @@ class _SignupFormScreenState extends State<SignupFormScreen> {
         _ChipRadio(
           label: 'Mode principal',
           value: _mode,
-          options: const ['Easy Flexible', 'Easy Taxi'],
+          options: const ['Carlinq Flexible', 'Carlinq Taxi'],
           onChanged: (v) => setState(() => _mode = v),
         ),
-        if (_mode == 'Easy Flexible') ...[
+        if (_mode == 'Carlinq Flexible') ...[
           const SizedBox(height: 16),
           _ChipRadio(
             label: 'Classe du vehicule',

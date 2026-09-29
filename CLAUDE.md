@@ -1,10 +1,10 @@
-# CLAUDE.md - Racine du projet EasyTransport
+# CLAUDE.md - Racine du projet Carlinq
 
 Contexte à charger lorsque Claude Code travaille au niveau racine du monorepo.
 
 ## Vue d'ensemble
 
-Trois sous-projets couvrant les 3 couches d'EasyTransport :
+Trois sous-projets couvrant les 3 couches d'Carlinq :
 
 - `Application/` : Flutter (Android + iOS). App unifiée passager + chauffeur avec 3 volets d'inscription (Passager, Drivers, Copilote).
 - `Backoffice/` : Next.js 14, panneau admin bilan/config/arbitrage.
@@ -17,7 +17,7 @@ Chaque sous-projet a son propre `CLAUDE.md` avec le contexte détaillé - lis-le
 - Cible : marché africain, Cameroun en Phase 1 puis Côte d'Ivoire / Sénégal / RDC (Phase 3).
 - Commission plateforme : **8%** (vs 20% chez Yango) - jamais dépasser 10% sans validation produit.
 - Portefeuille passager : minimum **500 XAF**.
-- 2 modes de service : **Easy Flexible** (3 classes, entre dans les quartiers) et **Easy Taxi** (points fixes bordure de route).
+- 2 modes de service : **Carlinq Flexible** (3 classes, entre dans les quartiers) et **Carlinq Taxi** (points fixes bordure de route).
 - 3 rôles utilisateur : passenger, drivers, copilote (+ admin en interne).
 - **Drivers** = chauffeurs affiliés type Yango.
 - **Copilote** = chauffeurs indépendants ou sociétés qui paient un cota mensuel (Pack Premium 5 000 XAF/mois) pour utiliser la plateforme.
@@ -31,7 +31,7 @@ Chaque sous-projet a son propre `CLAUDE.md` avec le contexte détaillé - lis-le
 
 ## Repo GitHub
 
-`https://github.com/jasonemmanue/Easy-Transport-project`
+`https://github.com/jasonemmanue/Carlinq-project`
 
 ## Cahier des charges
 

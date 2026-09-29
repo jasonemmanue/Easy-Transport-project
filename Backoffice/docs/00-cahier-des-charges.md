@@ -10,7 +10,7 @@ l'administrateur pilote.
 | | |
 |---|---|
 | Type | Application mobile de transport / plateforme collaborative |
-| Modes | **Easy Flexible** (Eco, Serenity, Prestige) et **Easy Taxi** |
+| Modes | **Carlinq Flexible** (Eco, Serenity, Prestige) et **Carlinq Taxi** |
 | Commission | **8 %** sur chaque course (contre 20 % chez Yango) |
 | Langues | Français, Anglais |
 | Cible géographique initiale | Cameroun — toute personne de 17 ans et plus |
@@ -28,7 +28,7 @@ Objectifs an 1 : 5 000 chauffeurs actifs · 500 000 courses/mois · 1 million de
 | **UC-AD01** | Gérer les comptes chauffeurs (validation, classe, suspension, exclusion) |
 | **UC-AD02** | Gérer les comptes passagers (signalements, exclusions) |
 | **UC-AD03** | Augmenter ou diminuer les points d'un chauffeur manuellement |
-| **UC-AD04** | Gérer les zones de stationnement Easy Taxi (CRUD, carte) |
+| **UC-AD04** | Gérer les zones de stationnement Carlinq Taxi (CRUD, carte) |
 | **UC-AD05** | Gérer la base de données des routes dégradées (ajout, validation des signalements) |
 | **UC-AD06** | Consulter les analytics en temps réel (courses actives, revenus, incidents) |
 | **UC-AD07** | Modérer les notations et les signalements |
@@ -50,9 +50,9 @@ Objectifs an 1 : 5 000 chauffeurs actifs · 500 000 courses/mois · 1 million de
 |---|---|
 | **Dashboard général** | KPI temps réel : courses actives par mode/classe, revenus, incidents |
 | **Carte en direct** | Vue de toutes les courses actives, positions des chauffeurs, arrêts actifs |
-| **Gestion chauffeurs** | Liste, validation, classe (Easy Flexible), mode (Easy Taxi), points, suspension, exclusion |
+| **Gestion chauffeurs** | Liste, validation, classe (Carlinq Flexible), mode (Carlinq Taxi), points, suspension, exclusion |
 | **Gestion passagers** | Liste, signalements, suspension, historique |
-| **Zones Easy Taxi** | CRUD des zones bordure de route, géolocalisation sur carte |
+| **Zones Carlinq Taxi** | CRUD des zones bordure de route, géolocalisation sur carte |
 | **Routes dégradées** | Base de données des routes, ajout, validation des signalements chauffeurs |
 | **Tarifs arrêts** | Configuration du supplément par arrêt (montant, par mode, par classe), quota d'arrêts impromptus |
 | **Tarifs embouteillage** | Configuration des seuils de détection, taux par minute, tolérance initiale |
@@ -67,7 +67,7 @@ Objectifs an 1 : 5 000 chauffeurs actifs · 500 000 courses/mois · 1 million de
 
 ## 4. Les deux modes — ce que l'admin doit distinguer
 
-| | **Easy Flexible** | **Easy Taxi** |
+| | **Carlinq Flexible** | **Carlinq Taxi** |
 |---|---|---|
 | Prise en charge | Le chauffeur **entre dans les quartiers**, au domicile | **Points fixes en bordure de route** |
 | Classes | **3** : Eco, Serenity, Prestige | **Aucune** |
@@ -75,7 +75,7 @@ Objectifs an 1 : 5 000 chauffeurs actifs · 500 000 courses/mois · 1 million de
 | Retour maison | Domicile exact | Bordure de route du quartier |
 | Couleur | `#0D47A1` | `#BF360C` |
 
-### Classes Easy Flexible
+### Classes Carlinq Flexible
 
 | Classe | Type de véhicule | Coefficient | Couleur |
 |---|---|---|---|
@@ -83,12 +83,12 @@ Objectifs an 1 : 5 000 chauffeurs actifs · 500 000 courses/mois · 1 million de
 | **Serenity** | Berline confort (Camry, Accent, Yaris…) | **× 1,3** | `#1565C0` |
 | **Prestige** | SUV / haut de gamme (Prado, Fortuner, RAV4…) | **× 1,7** | `#F57F17` |
 
-> **Inscription par classe** — chaque chauffeur Easy Flexible est inscrit dans **une seule
+> **Inscription par classe** — chaque chauffeur Carlinq Flexible est inscrit dans **une seule
 > classe**, en fonction du véhicule qu'il conduit et d'une **validation par l'administrateur**
 > (inspection du véhicule, critères qualité). Il ne peut pas passer d'une classe à l'autre sans
 > validation. Il peut **repostuler** dans une classe supérieure après inspection.
 
-**Toute interface qui propose une classe ou un supplément route dégradée en Easy Taxi est un bug.**
+**Toute interface qui propose une classe ou un supplément route dégradée en Carlinq Taxi est un bug.**
 
 ---
 
@@ -122,7 +122,7 @@ Un signalement en attente **n'influence jamais un prix**.
 
 > **Principe de tarification progressive par arrêt** — plus il y a d'arrêts, plus le coût de la
 > commande augmente. Les montants exacts sont **configurés par l'administrateur** et peuvent varier
-> selon le **mode** (Easy Flexible / Easy Taxi) et la **classe** (Eco / Serenity / Prestige).
+> selon le **mode** (Carlinq Flexible / Carlinq Taxi) et la **classe** (Eco / Serenity / Prestige).
 
 Le passager peut ajouter un **nombre illimité** d'arrêts, repositionnables par glisser-déposer.
 
@@ -176,7 +176,7 @@ minute** (modéré et sévère) et le **seuil de sévérité**.
 | Tarif de base | Distance × taux/km (selon mode et classe) | **Oui** |
 | Supplément par arrêt (pré-déclaré) | N arrêts × supplément unitaire | **Oui** |
 | Supplément arrêt impromptu | Par Pause Arrêt déclarée | **Oui** |
-| Supplément route dégradée | % du tarif de base (Easy Flexible) | **Oui** |
+| Supplément route dégradée | % du tarif de base (Carlinq Flexible) | **Oui** |
 | Supplément embouteillage / emballage | Taux par minute au-delà de la tolérance | **Oui** |
 | Supplément distance réelle | Si écart > 10 % de la distance déclarée | Seuil configurable |
 | **TOTAL COURSE** | Somme de toutes les composantes | Automatique |
@@ -240,7 +240,7 @@ bloquée.
 
 ---
 
-## 13. Zones de stationnement Easy Taxi
+## 13. Zones de stationnement Carlinq Taxi
 
 - Chaque quartier dispose d'un ou plusieurs **points de stationnement officiels en bordure de
   route**.
@@ -281,7 +281,7 @@ de toutes les actions sensibles (dont toutes les Pauses Arrêt avec position GPS
 
 1. Dashboard KPI + carte des courses en direct
 2. Gestion chauffeurs (validation, classe, mode, points, suspension)
-3. Gestion des zones Easy Taxi (CRUD bordure de route)
+3. Gestion des zones Carlinq Taxi (CRUD bordure de route)
 4. Gestion de la base des routes dégradées
 5. **Configuration des tarifs d'arrêts** (montant par arrêt, par mode, par classe)
 6. **Configuration des suppléments embouteillage** (seuils, taux/minute, tolérance)

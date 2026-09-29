@@ -313,7 +313,7 @@ métier est verrouillé et identique aux trois applications.
 1. Calculer un prix ou une commission — il **configure**, les Cloud Functions **calculent**.
 2. Écrire dans Firestore depuis le navigateur.
 3. Modifier un tarif sans aperçu d'impact, date d'effet, confirmation et audit.
-4. Proposer une classe de service ou un supplément route dégradée en **Easy Taxi**.
+4. Proposer une classe de service ou un supplément route dégradée en **Carlinq Taxi**.
 5. Lire les positions des chauffeurs en Firestore (RTDB uniquement).
 6. Trier ou filtrer une grande liste en mémoire.
 7. Stocker un jeton en `localStorage`.

@@ -21,7 +21,7 @@ app/
     │   └── [id]/page.tsx
     ├── rides/                 Recherche et détail des courses
     │   └── [id]/page.tsx
-    ├── zones/                 ⑤ Zones Easy Taxi (CRUD carte)
+    ├── zones/                 ⑤ Zones Carlinq Taxi (CRUD carte)
     ├── degraded-roads/        ⑥ Routes dégradées
     │   ├── page.tsx           Base actuelle
     │   └── reports/page.tsx   Signalements chauffeurs à valider

@@ -1,6 +1,6 @@
-# EasyTransport - API FastAPI
+# Carlinq - API FastAPI
 
-API REST bi-mode (Easy Flexible + Easy Taxi) pour le marché africain.
+API REST bi-mode (Carlinq Flexible + Carlinq Taxi) pour le marché africain.
 
 ## Démarrer (dev)
 
@@ -38,7 +38,7 @@ Cela démarre l'API (port 8000), PostgreSQL/PostGIS et Redis.
 - `POST /wallet/topup/{user_id}` - Orange Money / MTN MoMo
 - `GET  /admin/dashboard` - KPIs temps réel
 - `GET  /admin/disputes` - litiges Pause Arrêt
-- `GET  /zones/` - zones Easy Taxi
+- `GET  /zones/` - zones Carlinq Taxi
 
 ## Moteur de tarification
 

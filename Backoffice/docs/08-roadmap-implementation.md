@@ -77,7 +77,7 @@ une requête de modification tarifaire reçoit un 403.
 - [ ] Masquage par défaut des données personnelles, révélation journalisée
 
 **Terminé quand** : un chauffeur peut être validé de bout en bout, et la classe n'apparaît jamais
-en Easy Taxi.
+en Carlinq Taxi.
 
 ---
 
@@ -95,7 +95,7 @@ en Easy Taxi.
 
 ---
 
-## L4 — Zones Easy Taxi
+## L4 — Zones Carlinq Taxi
 
 - [ ] Intégration `@vis.gl/react-google-maps`
 - [ ] Carte + liste synchronisées, filtres par quartier et ville
@@ -141,7 +141,7 @@ en Easy Taxi.
 - [ ] **Dialogue de confirmation** avec récapitulatif ligne par ligne et saisie de « CONFIRMER »
 - [ ] **Aucun auto-save** sur ces écrans
 - [ ] Historique des modifications par section, avec `AuditDiff`
-- [ ] **Aucun champ de classe ni de route dégradée pour Easy Taxi**
+- [ ] **Aucun champ de classe ni de route dégradée pour Carlinq Taxi**
 
 **Terminé quand** : aucune valeur tarifaire ne peut être modifiée sans aperçu d'impact, date
 d'effet, confirmation et trace d'audit.
@@ -262,7 +262,7 @@ deux modules qui portent la valeur spécifique du produit.
 | L1 | Authentification, RBAC, layout | ☐ |
 | L2 | Table générique + Gestion chauffeurs | ☐ |
 | L3 | Gestion passagers et modération | ☐ |
-| L4 | Zones Easy Taxi | ☐ |
+| L4 | Zones Carlinq Taxi | ☐ |
 | L5 | Routes dégradées | ☐ |
 | L6 | **Configuration tarifaire** | ☐ |
 | L7 | **Litiges Pause Arrêt** | ☐ |

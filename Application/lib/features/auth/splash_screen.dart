@@ -48,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 28),
             const Text(
-              'EasyTransport',
+              'Carlinq',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 30,

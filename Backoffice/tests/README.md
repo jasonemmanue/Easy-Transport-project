@@ -56,8 +56,8 @@ pnpm exec playwright install --with-deps
 
 Ces écrans changent le prix payé par des milliers de personnes. Ils vérifient :
 
-- [ ] **Aucun champ de classe de service pour Easy Taxi**
-- [ ] **Aucun champ de supplément route dégradée pour Easy Taxi**
+- [ ] **Aucun champ de classe de service pour Carlinq Taxi**
+- [ ] **Aucun champ de supplément route dégradée pour Carlinq Taxi**
 - [ ] Bouton « Enregistrer » désactivé tant qu'aucune valeur n'a changé
 - [ ] **Aucun auto-save** : modifier puis quitter ne change rien
 - [ ] Aperçu d'impact **obligatoire** avant confirmation
