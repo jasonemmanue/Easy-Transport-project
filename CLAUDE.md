@@ -6,7 +6,7 @@ Contexte à charger lorsque Claude Code travaille au niveau racine du monorepo.
 
 Trois sous-projets couvrant les 3 couches d'Carlinq :
 
-- `Application/` : Flutter (Android + iOS). App unifiée passager + chauffeur avec 3 volets d'inscription (Passager, Drivers, Copilote).
+- `Application/` : Flutter (Android + iOS). **Deux apps distinctes** : `passager/` (Carlinq) et `chauffeur/` (Carlinq Chauffeur, volets Drivers et Copilote), plus le package partagé `carlinq_core/`.
 - `Backoffice/` : Next.js 14, panneau admin bilan/config/arbitrage.
 - `API/` : FastAPI, moteur de tarification, WebSockets, PostgreSQL + PostGIS + Redis.
 

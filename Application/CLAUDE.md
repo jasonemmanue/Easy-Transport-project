@@ -1,4 +1,4 @@
-# CLAUDE.md - Application Carlinq (Flutter)
+# CLAUDE.md - Applications mobiles Carlinq (Flutter)
 
 Ce fichier oriente Claude Code lorsqu'il travaille dans le sous-dossier `Application/`.
 
@@ -9,10 +9,18 @@ Carlinq est une plateforme mobile de transport bi-mode pour le marché africain 
 - **Carlinq Flexible** : chauffeur entre dans les quartiers, 3 classes (Eco, Serenity, Prestige).
 - **Carlinq Taxi** : points fixes en bordure de route, tarification simple.
 
-## Trois rôles à l'inscription
+## Deux applications distinctes
 
-- `passenger` : utilisateur classique.
-- `drivers` : chauffeur affilié Carlinq (recoit les commandes, commission 8%).
+Le cahier des charges prévoit **deux apps publiées séparément** (« App passager + app chauffeur », §5.1 / §5.2).
+Ne jamais les refusionner.
+
+| Dossier | App | Package Android | Rôles |
+|---|---|---|---|
+| `passager/` | **Carlinq** | `com.carlinq.passager` | `passenger` |
+| `chauffeur/` | **Carlinq Chauffeur** | `com.carlinq.chauffeur` | `drivers`, `copilote` |
+| `carlinq_core/` | package partagé (pas une app) | - | - |
+
+- `drivers` : chauffeur affilié Carlinq (reçoit les commandes, commission 8%).
 - `copilote` : chauffeur indépendant ou société de transport qui paie un cota mensuel (5 000 XAF/mois - Pack Premium) pour utiliser la plateforme avec sa propre flotte.
 
 ## Règles UX importantes (issues du cahier des charges v1.2)
@@ -29,16 +37,15 @@ Carlinq est une plateforme mobile de transport bi-mode pour le marché africain 
 
 ## Structure du code
 
-- `lib/core/theme/` : palette (couleurs Table 18 du cahier des charges), typographie Roboto.
-- `lib/core/models/` : enums `UserRole`, `CarlinqMode`, `ServiceClass`.
-- `lib/core/state/AppState` : ChangeNotifier partagé (Provider) - rôle courant, mode, portefeuille, points, objectifs.
-- `lib/features/auth/` : Splash → Welcome → SignupRole (3 tuiles) → SignupForm (3 étapes) → Login ; chauffeurs → `PendingValidationScreen` (validation admin).
-- `lib/features/passenger/` : 7 écrans passagers du §5.1 + historique.
-- `lib/features/driver/` : 7 écrans chauffeurs du §5.2 (partagés entre Drivers et Copilote, la couleur d'accent varie) + tracé d'itinéraire, fin de course, Pack Premium.
-- `lib/features/shared/` : `main_shell.dart` (bottom navigation selon le rôle, 5 onglets chauffeur), `notifications_screen.dart`.
-- `lib/widgets/fake_map.dart` : composant placeholder (à remplacer par `GoogleMap` en Phase MVP).
-- `lib/widgets/stops_editor.dart` : arrêts illimités réordonnables (glisser-déposer), `PriceLine`, formateur `xaf()`.
-- `docs/MAQUETTES.md` : correspondance écran ↔ cahier des charges, avec captures (`docs/maquettes/`, régénérées par `test/maquettes_test.dart`).
+- `carlinq_core/lib/carlinq_core.dart` (barrel) : `AppColors` / `AppTheme` (Table 18, Roboto), enums `UserRole`, `CarlinqMode`, `ServiceClass`, `BaseAppState` (thème, langue, mode, classe), `FakeMap` (placeholder à remplacer par `GoogleMap`), `StopsEditor` (arrêts réordonnables), `PriceLine`, `xaf()`, `ChatScreen`, `NotificationsScreen`, `editHomeAddress` / `confirmDeleteAccount`.
+- `carlinq_core/lib/testing.dart` : `loadRealFonts()` pour les tests (non exporté par le barrel).
+- Dans chaque app, `lib/core/state/app_state.dart` définit **son** `AppState extends BaseAppState` :
+  - passager : portefeuille, domicile ;
+  - chauffeur : rôle (Drivers / Copilote), points, objectifs, fenêtre de refus, Pack Premium, domicile.
+- `passager/lib/features/` : `auth/` (Splash → Bienvenue → Inscription 2 étapes / Connexion), `passenger/` (écrans §5.1), `shared/main_shell.dart` (4 onglets).
+- `chauffeur/lib/features/` : `auth/` (Splash → Bienvenue → Choix Drivers/Copilote → Inscription 3 étapes → `PendingValidationScreen`, Connexion), `driver/` (écrans §5.2, accent selon le rôle), `shared/main_shell.dart` (5 onglets).
+- `docs/MAQUETTES.md` : correspondance écran ↔ cahier des charges pour les deux apps, captures dans `docs/maquettes/` (préfixe `p` passager, `c` chauffeur), régénérées par `test/maquettes_test.dart` de chaque app.
+- Code utilisé par les deux apps → `carlinq_core` ; code propre à un public → l'app concernée. Pas d'import d'une app vers l'autre.
 
 ## Style de code
 
@@ -48,9 +55,11 @@ Carlinq est une plateforme mobile de transport bi-mode pour le marché africain 
 
 ## Bugs communs à surveiller
 
-- En Windows, le `flutter build` peut échouer avec espaces dans le chemin - le projet vit dans `Carlinq project/Application/`.
-- Le fichier de test `test/widget_test.dart` doit référencer `CarlinqApp`, pas `MyApp`.
-- Les tests widget doivent charger les polices réelles (`test/support/test_fonts.dart`), sinon la police de test à glyphes carrés (~2x plus large) produit de faux débordements.
+- En Windows, le `flutter build` peut échouer avec espaces dans le chemin - les apps vivent dans `Carlinq project/Application/<app>/`.
+- `test/widget_test.dart` doit référencer `CarlinqPassagerApp` / `CarlinqChauffeurApp`, pas `MyApp`.
+- Après modification de `carlinq_core`, relancer `flutter test` dans **les deux** apps.
+- Ne pas lancer plusieurs `flutter test` / `flutter build` en parallèle : ils se bloquent sur le verrou du SDK.
+- Les tests widget doivent charger les polices réelles (`loadRealFonts()` de `package:carlinq_core/testing.dart`), sinon la police de test à glyphes carrés (~2x plus large) produit de faux débordements.
 - `AppTheme.light(googleFonts: false)` en test : Google Fonts tente sinon un téléchargement réseau.
 - Tout écran avec `Timer.periodic` (suivi de course, navigation, commande) doit l'annuler dans `dispose()`.
 - `flutter_localizations` est requis pour la locale `fr` (sinon exception MaterialLocalizations).

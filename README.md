@@ -6,7 +6,7 @@ Application mobile de transport collaboratif bi-mode (Carlinq Flexible + Carlinq
 
 ```
 Carlinq project/
-├── Application/     # Flutter (Android + iOS) - passager + chauffeur
+├── Application/     # Flutter - 2 apps : passager/ (Carlinq) + chauffeur/ (Carlinq Chauffeur) + carlinq_core/
 ├── Backoffice/      # Next.js 14 - panneau administrateur
 ├── API/             # FastAPI (Python 3.11) - backend REST + WebSockets
 ├── carlinq_v1.2.pdf                # Cahier des charges 44 pages
@@ -14,11 +14,12 @@ Carlinq project/
 └── LogoProlink.png                       # Logo (utilisé dans l'app)
 ```
 
-## Trois volets à l'inscription mobile
+## Deux applications mobiles distinctes
 
-1. **Passager** - Réservation, portefeuille, suivi temps réel.
-2. **Drivers** - Chauffeurs affiliés Carlinq, style Yango, commission 8%.
-3. **Copilote** - Chauffeurs indépendants / sociétés de transport / flottes VTC ; abonnement Pack Premium 5 000 XAF/mois.
+| App | Public |
+|---|---|
+| **Carlinq** (`Application/passager`) | **Passager** - Réservation, portefeuille, suivi temps réel. |
+| **Carlinq Chauffeur** (`Application/chauffeur`) | **Drivers** - Chauffeurs affiliés Carlinq, style Yango, commission 8%.<br>**Copilote** - Chauffeurs indépendants / sociétés de transport / flottes VTC ; abonnement Pack Premium 5 000 XAF/mois. |
 
 ## Modes de service
 
@@ -42,7 +43,8 @@ Carlinq project/
 
 ### Mobile (Flutter)
 ```bash
-cd Application
+# Deux apps distinctes : Application/passager (Carlinq) et Application/chauffeur (Carlinq Chauffeur)
+cd Application/passager      # ou Application/chauffeur
 flutter pub get
 flutter run
 # ou build APK release (universel + un APK par architecture)
@@ -50,7 +52,7 @@ flutter build apk --release
 flutter build apk --release --split-per-abi
 ```
 
-Maquettes UI/UX de l'app (captures + correspondance au cahier des charges §5) : [Application/docs/MAQUETTES.md](Application/docs/MAQUETTES.md).
+Maquettes UI/UX des deux apps (captures + correspondance au cahier des charges §5) : [Application/docs/MAQUETTES.md](Application/docs/MAQUETTES.md).
 
 ### Backoffice (Next.js)
 ```bash

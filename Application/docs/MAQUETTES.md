@@ -1,29 +1,38 @@
-# Maquettes UI/UX - Application Carlinq
+# Maquettes UI/UX - Applications Carlinq
 
-Ce document fait correspondre chaque écran de l'application au cahier des charges v1.2
-(§5.1 Application Passager, §5.2 Application Chauffeur). Toutes les maquettes sont
-navigables sans backend (données démo du contexte camerounais, montants entiers en XAF).
+Carlinq, ce sont **deux applications distinctes**, publiées séparément sur les stores
+(cahier des charges v1.2, §5.1 et §5.2) :
 
-Les captures sont générées automatiquement (téléphone 360 × 780 dp, polices Roboto réelles) :
+| App | Dossier | Package Android | Public |
+|---|---|---|---|
+| **Carlinq** | `passager/` | `com.carlinq.passager` | Passagers |
+| **Carlinq Chauffeur** | `chauffeur/` | `com.carlinq.chauffeur` | Chauffeurs **Drivers** (affiliés) et **Copilote** (indépendants, sociétés) |
+
+Le code commun (thème, modèles, carte, arrêts, chat, notifications) vit dans le package
+`carlinq_core/`. Toutes les maquettes sont navigables sans backend (données démo du contexte
+camerounais, montants entiers en XAF).
+
+Les captures sont générées automatiquement (téléphone 360 × 780 dp, polices Roboto réelles),
+depuis chaque app :
 
 ```bash
+cd passager   # puis cd ../chauffeur
 flutter test test/maquettes_test.dart --dart-define=MAQUETTES=true --update-goldens
 ```
 
 > La carte est un composant `FakeMap` (placeholder) qui sera remplacé par Google Maps en Phase MVP.
 
-## Authentification et inscription
+# App Passager - Carlinq (`passager/`)
+
+## Entrée dans l'app
 
 | Écran | Fichier | Capture |
 |---|---|---|
-| Bienvenue | `features/auth/welcome_screen.dart` | ![](maquettes/a01_bienvenue.png) |
-| Choix du profil (Passager / Drivers / Copilote) | `features/auth/signup_role_screen.dart` | ![](maquettes/a02_choix_profil.png) |
-| Inscription passager (2 étapes) | `features/auth/signup_form_screen.dart` | ![](maquettes/a03_inscription_passager.png) |
-| Inscription Copilote (3 étapes, cota 5 000 XAF) | `features/auth/signup_form_screen.dart` | ![](maquettes/a04_inscription_copilote.png) |
-| Connexion | `features/auth/login_screen.dart` | ![](maquettes/a05_connexion.png) |
-| **Validation en attente** (chauffeurs, validation admin obligatoire) | `features/auth/pending_validation_screen.dart` | ![](maquettes/a06_validation_en_attente.png) |
+| Bienvenue | `features/auth/welcome_screen.dart` | ![](maquettes/p00a_bienvenue.png) |
+| Inscription passager (2 étapes : identité, consentement) | `features/auth/signup_form_screen.dart` | ![](maquettes/p00b_inscription.png) |
+| Connexion | `features/auth/login_screen.dart` | ![](maquettes/p00c_connexion.png) |
 
-## Application Passager (§5.1)
+## Écrans principaux (§5.1)
 
 | § | Écran | Éléments couverts | Capture |
 |---|---|---|---|
@@ -38,10 +47,23 @@ flutter test test/maquettes_test.dart --dart-define=MAQUETTES=true --update-gold
 | - | Historique | Courses passées par mode / classe | ![](maquettes/p08_historique.png) |
 | - | Notifications | Centre de notifications + réglages | ![](maquettes/p09_notifications.png) |
 
-## Application Chauffeur - Drivers et Copilote (§5.2)
+# App Chauffeur - Carlinq Chauffeur (`chauffeur/`)
 
-Les écrans sont partagés ; la couleur d'accent et la carte « Cota mensuel » changent selon le rôle.
-Barre de navigation : Tableau de bord · Itinéraires · Zones · Revenus · Profil.
+Une seule app pour les deux profils chauffeur ; la couleur d'accent et la carte « Cota mensuel »
+changent selon le rôle (Drivers ou Copilote). Barre de navigation : Tableau de bord · Itinéraires ·
+Zones · Revenus · Profil.
+
+## Entrée dans l'app
+
+| Écran | Fichier | Capture |
+|---|---|---|
+| Bienvenue chauffeur | `features/auth/welcome_screen.dart` | ![](maquettes/c00a_bienvenue.png) |
+| Choix du profil (Drivers / Copilote) | `features/auth/signup_role_screen.dart` | ![](maquettes/c00b_choix_profil.png) |
+| Inscription Copilote (3 étapes, cota 5 000 XAF) | `features/auth/signup_form_screen.dart` | ![](maquettes/c00c_inscription_copilote.png) |
+| Connexion (Drivers / Copilote) | `features/auth/login_screen.dart` | ![](maquettes/c00d_connexion.png) |
+| **Validation en attente** (validation admin obligatoire avant activation) | `features/auth/pending_validation_screen.dart` | ![](maquettes/c00e_validation_en_attente.png) |
+
+## Écrans principaux (§5.2)
 
 | § | Écran | Éléments couverts | Capture |
 |---|---|---|---|
@@ -61,7 +83,7 @@ Barre de navigation : Tableau de bord · Itinéraires · Zones · Revenus · Pro
 ## Règles métier reflétées dans les maquettes
 
 - Commission plateforme : **8 %** (affichée côté chauffeur uniquement).
-- Montants toujours en **entiers XAF** (`xaf()` dans `widgets/stops_editor.dart` formate `12 500 XAF`).
+- Montants toujours en **entiers XAF** (`xaf()` de `carlinq_core` formate `12 500 XAF`).
 - Portefeuille minimum **500 XAF** : paiement « Portefeuille » bloqué et alerte à l'accueil en dessous.
 - Points chauffeur : +2 par course terminée, −5 par refus hors quota ; fenêtre de refus quotidienne (démo : 6 min 20 s, −1 min par refus).
 - Inscription Drivers / Copilote : écran « validation en attente » avant activation (le bouton « Valider (démo admin) » n'existe que pour la démo).

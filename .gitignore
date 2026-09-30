@@ -3,27 +3,28 @@ _archive_chauffeurs/
 _old_git/
 **/_old_git/
 
-# Flutter
-Application/.dart_tool/
-Application/.flutter-plugins
-Application/.flutter-plugins-dependencies
-Application/.packages
-Application/.pub-cache/
-Application/.pub/
-Application/build/
+# Flutter (Application/passager, Application/chauffeur, Application/carlinq_core)
+Application/**/.dart_tool/
+Application/**/.flutter-plugins
+Application/**/.flutter-plugins-dependencies
+Application/**/.packages
+Application/**/.pub-cache/
+Application/**/.pub/
+Application/**/build/
 Application/**/generated_plugin_registrant.*
-Application/.idea/
-Application/.vscode/
-Application/*.iml
-Application/android/.gradle/
-Application/android/local.properties
-Application/android/**/GeneratedPluginRegistrant.java
-Application/android/app/debug/
-Application/android/app/profile/
-Application/android/app/release/
-Application/ios/Pods/
-Application/ios/Runner.xcworkspace/xcuserdata/
-Application/ios/Runner.xcodeproj/xcuserdata/
+Application/**/.idea/
+Application/**/.vscode/
+Application/**/*.iml
+Application/**/android/.gradle/
+Application/**/android/.kotlin/
+Application/**/android/local.properties
+Application/**/android/**/GeneratedPluginRegistrant.java
+Application/**/android/app/debug/
+Application/**/android/app/profile/
+Application/**/android/app/release/
+Application/**/ios/Pods/
+Application/**/ios/Runner.xcworkspace/xcuserdata/
+Application/**/ios/Runner.xcodeproj/xcuserdata/
 
 # Next.js
 Backoffice/node_modules/
