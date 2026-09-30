@@ -5,6 +5,10 @@ import '../../core/models/user_role.dart';
 import '../../core/state/app_state.dart';
 import '../../core/theme/app_colors.dart';
 import '../auth/welcome_screen.dart';
+import '../passenger/passenger_profile_screen.dart'
+    show confirmDeleteAccount, editHomeAddress;
+import '../shared/notifications_screen.dart';
+import 'driver_premium_screen.dart';
 
 class DriverProfileScreen extends StatelessWidget {
   const DriverProfileScreen({super.key});
@@ -48,7 +52,7 @@ class DriverProfileScreen extends StatelessWidget {
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.w800)),
-                      Text('${role?.label ?? 'Chauffeur'} - Carlinq Flexible - Serenity',
+                      Text('${role?.label ?? 'Chauffeur'} - ${app.modeLabel}',
                           style:
                               const TextStyle(color: Colors.white70)),
                       const SizedBox(height: 4),
@@ -77,6 +81,43 @@ class DriverProfileScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const Text('Mode et classe actifs',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 15)),
+                  const SizedBox(height: 10),
+                  _row('Mode', app.mode == CarlinqMode.flexible
+                      ? 'Carlinq Flexible' : 'Carlinq Taxi'),
+                  if (app.mode == CarlinqMode.flexible)
+                    _row('Classe',
+                        '${app.serviceClass.label} (x${app.serviceClass.coefficient})'),
+                  _row('Statut', 'Valide par l\'administration'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            color: AppColors.copiloteRole.withOpacity(0.06),
+            child: ListTile(
+              leading: const Icon(Icons.workspace_premium,
+                  color: AppColors.copiloteRole),
+              title: const Text('Pack Premium - 5 000 XAF/mois',
+                  style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: Text(app.premiumActive
+                  ? 'Actif - renouvellement le 15/10/2026'
+                  : 'Inactif - souscrire'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const DriverPremiumScreen())),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   const Text('Vehicule',
                       style: TextStyle(
                           fontWeight: FontWeight.w800, fontSize: 15)),
@@ -85,7 +126,7 @@ class DriverProfileScreen extends StatelessWidget {
                   _row('Modele', 'Camry 2018'),
                   _row('Couleur', 'Gris metallise'),
                   _row('Immatriculation', 'LT 8342'),
-                  _row('Classe', 'Serenity (x1.3)'),
+                  _row('Classe', app.serviceClass.label),
                 ],
               ),
             ),
@@ -105,6 +146,15 @@ class DriverProfileScreen extends StatelessWidget {
                   _doc('Permis de conduire', validated: true),
                   _doc('Carte grise', validated: true),
                   _doc('Assurance', validated: false),
+                  const SizedBox(height: 6),
+                  OutlinedButton.icon(
+                    onPressed: () => ScaffoldMessenger.of(context)
+                        .showSnackBar(const SnackBar(
+                            content: Text(
+                                'Document envoye - en attente de validation admin.'))),
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text('Soumettre un document'),
+                  ),
                 ],
               ),
             ),
@@ -120,9 +170,18 @@ class DriverProfileScreen extends StatelessWidget {
                       style: TextStyle(
                           fontWeight: FontWeight.w800, fontSize: 15)),
                   const SizedBox(height: 10),
-                  _row('Domicile enregistre',
-                      'Bonaberi, Quartier Deido - Rue 45'),
+                  _row('Domicile enregistre', app.driverHome),
                   _row('Retour maison', 'Actif (1 tap)'),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => editHomeAddress(context,
+                          current: app.driverHome,
+                          onSave: context.read<AppState>().setDriverHome),
+                      icon: const Icon(Icons.edit_location_alt_outlined),
+                      label: const Text('Modifier'),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -142,6 +201,14 @@ class DriverProfileScreen extends StatelessWidget {
             title: const Text('English'),
             secondary: const Icon(Icons.language),
           ),
+          ListTile(
+            leading: const Icon(Icons.notifications_outlined),
+            title: const Text('Gestion des notifications'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) =>
+                    const NotificationSettingsScreen(driver: true))),
+          ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
@@ -156,6 +223,12 @@ class DriverProfileScreen extends StatelessWidget {
             },
             icon: const Icon(Icons.logout),
             label: const Text('Deconnexion'),
+          ),
+          TextButton.icon(
+            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+            onPressed: () => confirmDeleteAccount(context),
+            icon: const Icon(Icons.delete_forever_outlined),
+            label: const Text('Supprimer mon compte'),
           ),
         ],
       ),

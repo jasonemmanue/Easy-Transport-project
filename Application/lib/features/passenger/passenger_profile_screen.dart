@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/state/app_state.dart';
 import '../../core/theme/app_colors.dart';
 import '../auth/welcome_screen.dart';
+import '../shared/notifications_screen.dart';
 
 class PassengerProfileScreen extends StatelessWidget {
   const PassengerProfileScreen({super.key});
@@ -59,10 +60,13 @@ class PassengerProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           _SectionHeader('Adresses'),
-          const _MenuTile(
+          _MenuTile(
               icon: Icons.home_outlined,
-              title: 'Domicile',
-              subtitle: 'Douala, Akwa - Rue 12 (enregistree)'),
+              title: 'Domicile (Retour maison)',
+              subtitle: '${app.passengerHome} - valide GPS',
+              onTap: () => editHomeAddress(context,
+                  current: app.passengerHome,
+                  onSave: context.read<AppState>().setPassengerHome)),
           const _MenuTile(
               icon: Icons.work_outline,
               title: 'Bureau',
@@ -83,10 +87,12 @@ class PassengerProfileScreen extends StatelessWidget {
             title: const Text('English'),
             secondary: const Icon(Icons.language),
           ),
-          const _MenuTile(
+          _MenuTile(
               icon: Icons.notifications_outlined,
-              title: 'Notifications push',
-              subtitle: 'Commandes, promotions, alertes'),
+              title: 'Gestion des notifications',
+              subtitle: 'Course, messages, paiements, promotions',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const NotificationSettingsScreen()))),
           const SizedBox(height: 12),
           _SectionHeader('Compte'),
           const _MenuTile(
@@ -115,6 +121,13 @@ class PassengerProfileScreen extends StatelessWidget {
             icon: const Icon(Icons.logout),
             label: const Text('Deconnexion'),
           ),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+            onPressed: () => confirmDeleteAccount(context),
+            icon: const Icon(Icons.delete_forever_outlined),
+            label: const Text('Supprimer mon compte'),
+          ),
         ],
       ),
     );
@@ -137,10 +150,12 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _MenuTile extends StatelessWidget {
-  const _MenuTile({required this.icon, required this.title, this.subtitle});
+  const _MenuTile(
+      {required this.icon, required this.title, this.subtitle, this.onTap});
   final IconData icon;
   final String title;
   final String? subtitle;
+  final VoidCallback? onTap;
   @override
   Widget build(BuildContext context) => Card(
         margin: const EdgeInsets.only(bottom: 8),
@@ -149,7 +164,86 @@ class _MenuTile extends StatelessWidget {
           title: Text(title),
           subtitle: subtitle != null ? Text(subtitle!) : null,
           trailing: const Icon(Icons.chevron_right),
-          onTap: () {},
+          onTap: onTap ?? () {},
         ),
       );
+}
+
+/// Saisie ou validation GPS de l'adresse domicile (utilisee par Retour maison).
+void editHomeAddress(BuildContext context,
+    {required String current, required ValueChanged<String> onSave}) {
+  final ctrl = TextEditingController(text: current);
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (ctx) => Padding(
+      padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Adresse domicile',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          const Text('Utilisee pour le bouton Retour maison.',
+              style: TextStyle(color: AppColors.textSecondary)),
+          const SizedBox(height: 12),
+          TextField(
+            controller: ctrl,
+            decoration: const InputDecoration(
+              labelText: 'Adresse',
+              prefixIcon: Icon(Icons.home_outlined),
+            ),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: () => ctrl.text = 'Douala, Akwa - Rue 12 (position GPS)',
+            icon: const Icon(Icons.my_location),
+            label: const Text('Utiliser ma position GPS actuelle'),
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: () {
+              onSave(ctrl.text);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+void confirmDeleteAccount(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      icon: const Icon(Icons.delete_forever, color: AppColors.danger),
+      title: const Text('Supprimer le compte ?'),
+      content: const Text(
+          'Vos donnees personnelles seront supprimees sous 30 jours. '
+          'Le solde restant du portefeuille vous sera rembourse.'),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+          onPressed: () {
+            Navigator.pop(ctx);
+            context.read<AppState>().logout();
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+              (_) => false,
+            );
+          },
+          child: const Text('Supprimer'),
+        ),
+      ],
+    ),
+  );
 }

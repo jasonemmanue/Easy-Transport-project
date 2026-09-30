@@ -60,7 +60,10 @@ class DriverEarningsScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: () => ScaffoldMessenger.of(context)
+                              .showSnackBar(const SnackBar(
+                                  content: Text(
+                                      'Objectif en pause 72 h - aucune penalite.'))),
                           icon: const Icon(Icons.pause_circle),
                           label: const Text('Pause 72h'),
                         ),
@@ -68,7 +71,7 @@ class DriverEarningsScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: () => _editGoal(context),
                           icon: const Icon(Icons.edit),
                           label: const Text('Modifier'),
                         ),
@@ -122,6 +125,36 @@ class DriverEarningsScreen extends StatelessWidget {
           _tripLine('Hier 21:04', 'Prisca L.', '3 800 XAF'),
           _tripLine('Hier 18:19', 'Ekue A.', '2 380 XAF'),
         ],
+      ),
+    );
+  }
+
+  void _editGoal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Choisir un palier hebdomadaire',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            ),
+            for (final t in const [
+              (30, '+5 000 XAF'),
+              (50, '+10 000 XAF'),
+              (80, '+20 000 XAF'),
+            ])
+              ListTile(
+                leading: const Icon(Icons.flag, color: AppColors.classEco),
+                title: Text('${t.$1} courses / semaine'),
+                trailing: Text(t.$2,
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
+                onTap: () => Navigator.pop(ctx),
+              ),
+          ],
+        ),
       ),
     );
   }

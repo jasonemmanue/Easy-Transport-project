@@ -10,6 +10,7 @@ import '../driver/driver_dashboard_screen.dart';
 import '../driver/driver_routes_screen.dart';
 import '../driver/driver_earnings_screen.dart';
 import '../driver/driver_profile_screen.dart';
+import '../driver/driver_parking_zones_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key, required this.role});
@@ -35,6 +36,7 @@ class _MainShellState extends State<MainShell> {
     return const [
       _Tab('Tableau bord', Icons.dashboard_outlined, DriverDashboardScreen()),
       _Tab('Itineraires', Icons.route_outlined, DriverRoutesScreen()),
+      _Tab('Zones', Icons.local_taxi_outlined, DriverParkingZonesScreen()),
       _Tab('Revenus', Icons.payments_outlined, DriverEarningsScreen()),
       _Tab('Profil', Icons.person_outline, DriverProfileScreen()),
     ];

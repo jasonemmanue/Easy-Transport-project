@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'core/state/app_state.dart';
@@ -25,6 +26,7 @@ class CarlinqApp extends StatelessWidget {
           themeMode: app.themeMode,
           locale: app.locale,
           supportedLocales: const [Locale('fr'), Locale('en')],
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
           home: const SplashScreen(),
         ),
       ),

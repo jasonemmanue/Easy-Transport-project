@@ -7,6 +7,9 @@ import '../../core/theme/app_colors.dart';
 import '../../widgets/fake_map.dart';
 import 'driver_order_screen.dart';
 import 'driver_navigation_screen.dart';
+import 'driver_premium_screen.dart';
+import 'driver_return_home_screen.dart';
+import '../shared/notifications_screen.dart';
 
 class DriverDashboardScreen extends StatefulWidget {
   const DriverDashboardScreen({super.key});
@@ -35,10 +38,17 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                     : Icons.directions_car,
                 color: color),
             const SizedBox(width: 8),
-            Text('${role?.label ?? 'Chauffeur'}'),
+            Text(role?.label ?? 'Chauffeur'),
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'Notifications',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const NotificationsScreen(driver: true))),
+            icon: const Badge(
+                smallSize: 8, child: Icon(Icons.notifications_outlined)),
+          ),
           Row(
             children: [
               Text(_online ? 'En ligne' : 'Hors ligne',
@@ -57,6 +67,8 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _ActiveModeCard(app: app),
+          const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -78,6 +90,9 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                         color: Colors.white,
                         fontSize: 30,
                         fontWeight: FontWeight.w800)),
+                const Text('Semaine : 112 400 XAF',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 6),
                 Row(
                   children: [
@@ -139,8 +154,35 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             ],
           ),
           const SizedBox(height: 16),
+          if (!_online)
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.divider),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.power_settings_new,
+                      color: AppColors.textSecondary),
+                  SizedBox(width: 8),
+                  Expanded(
+                      child: Text(
+                          'Vous etes hors ligne : aucune commande ne vous sera proposee.')),
+                ],
+              ),
+            ),
           if (_online)
             _IncomingOrderCard(
+              onRefuse: () {
+                final penalty = app.refusalSecondsLeft < 60;
+                context.read<AppState>().refuseOrder();
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(penalty
+                        ? 'Quota de refus epuise : -5 points.'
+                        : 'Commande refusee - 1 min deduite du quota.')));
+              },
               onAccept: () => Navigator.of(context).push(
                 MaterialPageRoute(
                     builder: (_) => const DriverNavigationScreen()),
@@ -149,11 +191,18 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                 MaterialPageRoute(builder: (_) => const DriverOrderScreen()),
               ),
             ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const DriverReturnHomeScreen())),
+            icon: const Icon(Icons.home_outlined),
+            label: const Text('Retour maison'),
+          ),
           const SizedBox(height: 16),
-          const _QuotaCard(),
+          _QuotaCard(secondsLeft: app.refusalSecondsLeft),
           if (role == UserRole.copilote) ...[
             const SizedBox(height: 16),
-            _CopiloteQuotaCard(),
+            _CopiloteQuotaCard(active: app.premiumActive),
           ],
         ],
       ),
@@ -240,8 +289,9 @@ class _StatCard extends StatelessWidget {
 
 class _IncomingOrderCard extends StatelessWidget {
   const _IncomingOrderCard(
-      {required this.onAccept, required this.onOpen});
+      {required this.onAccept, required this.onOpen, required this.onRefuse});
   final VoidCallback onAccept;
+  final VoidCallback onRefuse;
   final VoidCallback onOpen;
   @override
   Widget build(BuildContext context) {
@@ -303,7 +353,7 @@ class _IncomingOrderCard extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.danger,
                       side: const BorderSide(color: AppColors.danger)),
-                  onPressed: () {},
+                  onPressed: onRefuse,
                   icon: const Icon(Icons.close),
                   label: const Text('Refuser'),
                 ),
@@ -355,7 +405,8 @@ class _Row extends StatelessWidget {
 }
 
 class _QuotaCard extends StatelessWidget {
-  const _QuotaCard();
+  const _QuotaCard({required this.secondsLeft});
+  final int secondsLeft;
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -373,13 +424,16 @@ class _QuotaCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Il vous reste 6 min 20 s dans la journee pour refuser une course sans penalite.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            Text(
+              secondsLeft > 0
+                  ? 'Il vous reste ${secondsLeft ~/ 60} min ${secondsLeft % 60} s aujourd\'hui pour refuser une course sans penalite.'
+                  : 'Quota epuise : chaque refus coute -5 points jusqu\'a minuit.',
+              style:
+                  const TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: 6),
             LinearProgressIndicator(
-              value: 0.65,
+              value: secondsLeft / 600,
               color: AppColors.warning,
               backgroundColor: AppColors.warning.withOpacity(0.15),
             ),
@@ -391,7 +445,8 @@ class _QuotaCard extends StatelessWidget {
 }
 
 class _CopiloteQuotaCard extends StatelessWidget {
-  const _CopiloteQuotaCard();
+  const _CopiloteQuotaCard({required this.active});
+  final bool active;
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -411,9 +466,13 @@ class _CopiloteQuotaCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            const Text('Abonnement Pack Premium - actif',
-                style: TextStyle(fontWeight: FontWeight.w700)),
-            const Text('Prochain prelevement : 15 octobre 2026',
+            Text(
+                'Pack Premium 5 000 XAF/mois - ${active ? 'actif' : 'inactif'}',
+                style: const TextStyle(fontWeight: FontWeight.w700)),
+            Text(
+                active
+                    ? 'Prochain prelevement : 15 octobre 2026'
+                    : 'Souscrivez pour recevoir des commandes',
                 style: TextStyle(
                     fontSize: 12, color: AppColors.textSecondary)),
             const SizedBox(height: 8),
@@ -421,7 +480,9 @@ class _CopiloteQuotaCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (_) => const DriverPremiumScreen())),
                     child: const Text('Voir factures'),
                   ),
                 ),
@@ -430,12 +491,66 @@ class _CopiloteQuotaCard extends StatelessWidget {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.copiloteRole),
-                    onPressed: () {},
-                    child: const Text('Renouveler'),
+                    onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (_) => const DriverPremiumScreen())),
+                    child: Text(active ? 'Renouveler' : 'Souscrire'),
                   ),
                 ),
               ],
             )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Mode actif affiche : Carlinq Flexible (avec classe) ou Carlinq Taxi.
+class _ActiveModeCard extends StatelessWidget {
+  const _ActiveModeCard({required this.app});
+  final AppState app;
+
+  @override
+  Widget build(BuildContext context) {
+    final flexible = app.mode == CarlinqMode.flexible;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(flexible ? Icons.map_outlined : Icons.local_taxi,
+                    color: flexible
+                        ? AppColors.flexibleBlue
+                        : AppColors.taxiOrange),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Mode actif : ${app.modeLabel}',
+                      style: const TextStyle(fontWeight: FontWeight.w800)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SegmentedButton<CarlinqMode>(
+              segments: const [
+                ButtonSegment(
+                    value: CarlinqMode.flexible, label: Text('Flexible')),
+                ButtonSegment(value: CarlinqMode.taxi, label: Text('Taxi')),
+              ],
+              selected: {app.mode},
+              onSelectionChanged: (v) =>
+                  context.read<AppState>().setMode(v.first),
+            ),
+            if (flexible) ...[
+              const SizedBox(height: 6),
+              Text(
+                  "Classe validee par l'administration : ${app.serviceClass.label} (${app.serviceClass.vehicle})",
+                  style: const TextStyle(
+                      fontSize: 12, color: AppColors.textSecondary)),
+            ],
           ],
         ),
       ),

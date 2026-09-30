@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/models/user_role.dart';
 import '../../core/state/app_state.dart';
 import '../../core/theme/app_colors.dart';
+import 'pending_validation_screen.dart';
 import '../shared/main_shell.dart';
 
 class SignupFormScreen extends StatefulWidget {
@@ -323,9 +324,12 @@ class _SignupFormScreenState extends State<SignupFormScreen> {
   }
 
   void _finish() {
+    final role = context.read<AppState>().role!;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
-        builder: (_) => MainShell(role: context.read<AppState>().role!),
+        builder: (_) => role == UserRole.passenger
+            ? MainShell(role: role)
+            : PendingValidationScreen(role: role),
       ),
       (_) => false,
     );

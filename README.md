@@ -45,9 +45,12 @@ Carlinq project/
 cd Application
 flutter pub get
 flutter run
-# ou build APK release
+# ou build APK release (universel + un APK par architecture)
 flutter build apk --release
+flutter build apk --release --split-per-abi
 ```
+
+Maquettes UI/UX de l'app (captures + correspondance au cahier des charges §5) : [Application/docs/MAQUETTES.md](Application/docs/MAQUETTES.md).
 
 ### Backoffice (Next.js)
 ```bash

@@ -32,11 +32,13 @@ Carlinq est une plateforme mobile de transport bi-mode pour le marché africain 
 - `lib/core/theme/` : palette (couleurs Table 18 du cahier des charges), typographie Roboto.
 - `lib/core/models/` : enums `UserRole`, `CarlinqMode`, `ServiceClass`.
 - `lib/core/state/AppState` : ChangeNotifier partagé (Provider) - rôle courant, mode, portefeuille, points, objectifs.
-- `lib/features/auth/` : Splash → Welcome → SignupRole (3 tuiles) → SignupForm (3 étapes) → Login.
-- `lib/features/passenger/` : 7 écrans passagers.
-- `lib/features/driver/` : 7 écrans chauffeurs (partagés entre Drivers et Copilote, la couleur d'accent varie).
-- `lib/features/shared/main_shell.dart` : bottom navigation selon le rôle.
+- `lib/features/auth/` : Splash → Welcome → SignupRole (3 tuiles) → SignupForm (3 étapes) → Login ; chauffeurs → `PendingValidationScreen` (validation admin).
+- `lib/features/passenger/` : 7 écrans passagers du §5.1 + historique.
+- `lib/features/driver/` : 7 écrans chauffeurs du §5.2 (partagés entre Drivers et Copilote, la couleur d'accent varie) + tracé d'itinéraire, fin de course, Pack Premium.
+- `lib/features/shared/` : `main_shell.dart` (bottom navigation selon le rôle, 5 onglets chauffeur), `notifications_screen.dart`.
 - `lib/widgets/fake_map.dart` : composant placeholder (à remplacer par `GoogleMap` en Phase MVP).
+- `lib/widgets/stops_editor.dart` : arrêts illimités réordonnables (glisser-déposer), `PriceLine`, formateur `xaf()`.
+- `docs/MAQUETTES.md` : correspondance écran ↔ cahier des charges, avec captures (`docs/maquettes/`, régénérées par `test/maquettes_test.dart`).
 
 ## Style de code
 
@@ -48,3 +50,7 @@ Carlinq est une plateforme mobile de transport bi-mode pour le marché africain 
 
 - En Windows, le `flutter build` peut échouer avec espaces dans le chemin - le projet vit dans `Carlinq project/Application/`.
 - Le fichier de test `test/widget_test.dart` doit référencer `CarlinqApp`, pas `MyApp`.
+- Les tests widget doivent charger les polices réelles (`test/support/test_fonts.dart`), sinon la police de test à glyphes carrés (~2x plus large) produit de faux débordements.
+- `AppTheme.light(googleFonts: false)` en test : Google Fonts tente sinon un téléchargement réseau.
+- Tout écran avec `Timer.periodic` (suivi de course, navigation, commande) doit l'annuler dans `dispose()`.
+- `flutter_localizations` est requis pour la locale `fr` (sinon exception MaterialLocalizations).

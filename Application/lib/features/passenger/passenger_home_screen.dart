@@ -7,7 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../widgets/fake_map.dart';
 import 'reservation_flexible_screen.dart';
 import 'reservation_taxi_screen.dart';
-import 'ride_tracking_screen.dart';
+import '../shared/notifications_screen.dart';
 
 class PassengerHomeScreen extends StatelessWidget {
   const PassengerHomeScreen({super.key});
@@ -37,8 +37,11 @@ class PassengerHomeScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.notifications_outlined)),
+              tooltip: 'Notifications',
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const NotificationsScreen())),
+              icon: const Badge(
+                  smallSize: 8, child: Icon(Icons.notifications_outlined))),
         ],
       ),
       body: ListView(
@@ -49,7 +52,37 @@ class PassengerHomeScreen extends StatelessWidget {
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
-          _SearchBar(onTap: () {}),
+          _SearchBar(
+            onTap: () {
+              context.read<AppState>().setMode(CarlinqMode.flexible);
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) =>
+                      const ReservationFlexibleScreen(destination: '')));
+            },
+          ),
+          if (app.walletBalance < 500) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.danger.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.danger),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.account_balance_wallet_outlined,
+                      color: AppColors.danger),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                        "Solde inferieur a 500 XAF : rechargez votre portefeuille pour payer via l'app.",
+                        style: TextStyle(fontSize: 12)),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 18),
           Row(
             children: [
@@ -107,10 +140,9 @@ class PassengerHomeScreen extends StatelessWidget {
           _HomeShortcut(
             icon: Icons.home_work_outlined,
             title: 'Retour maison',
-            subtitle: 'Domicile enregistre - 1 tap',
+            subtitle: '${app.passengerHome} - 1 tap',
             color: AppColors.classEco,
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => const RideTrackingScreen())),
+            onTap: () => _returnHome(context, app),
           ),
           const SizedBox(height: 12),
           Row(
@@ -147,6 +179,65 @@ class PassengerHomeScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Retour maison : respecte la regle du mode choisi
+/// (Flexible = domicile exact, Taxi = bordure de route du quartier).
+void _returnHome(BuildContext context, AppState app) {
+  showModalBottomSheet(
+    context: context,
+    builder: (ctx) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Retour maison',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            Text(app.passengerHome,
+                style: const TextStyle(color: AppColors.textSecondary)),
+            const SizedBox(height: 16),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                  backgroundColor: AppColors.flexibleBlue,
+                  child: Icon(Icons.home, color: Colors.white)),
+              title: const Text('Carlinq Flexible'),
+              subtitle: const Text("Jusqu'a votre porte, dans le quartier"),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.read<AppState>().setMode(CarlinqMode.flexible);
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => ReservationFlexibleScreen(
+                        destination: app.passengerHome)));
+              },
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                  backgroundColor: AppColors.taxiOrange,
+                  child: Icon(Icons.local_taxi, color: Colors.white)),
+              title: const Text('Carlinq Taxi'),
+              subtitle:
+                  const Text('Depose en bordure de route de votre quartier'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.read<AppState>().setMode(CarlinqMode.taxi);
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => ReservationTaxiScreen(
+                        destination:
+                            'Bordure - ${app.passengerHome.split(' - ').first}')));
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _SearchBar extends StatelessWidget {

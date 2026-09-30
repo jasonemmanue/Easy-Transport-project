@@ -2,28 +2,54 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../widgets/fake_map.dart';
+import '../../widgets/stops_editor.dart';
 import 'ride_tracking_screen.dart';
 
 class ReservationTaxiScreen extends StatefulWidget {
-  const ReservationTaxiScreen({super.key});
+  const ReservationTaxiScreen({super.key, this.destination});
+
+  final String? destination;
+
   @override
-  State<ReservationTaxiScreen> createState() =>
-      _ReservationTaxiScreenState();
+  State<ReservationTaxiScreen> createState() => _ReservationTaxiScreenState();
 }
 
 class _ReservationTaxiScreenState extends State<ReservationTaxiScreen> {
+  static const _baseFare = 1800;
+  static const _stopFee = 200;
+
   int _zoneIndex = 0;
   int _places = 1;
+  String _payment = 'Especes (direct)';
+  bool _nearestFirst = true;
+  List<String> _stops = [];
+  late final _destCtrl = TextEditingController(text: widget.destination);
 
-  final _zones = const [
-    _TaxiZone('Zone Akwa - Rue Joss', '250 m', 8),
-    _TaxiZone('Zone Bonapriso - Boulevard', '600 m', 5),
-    _TaxiZone('Zone Deido - Marche', '1.1 km', 12),
-    _TaxiZone('Zone Bali - Hopital Laquintinie', '1.8 km', 3),
+  static const _zones = [
+    _TaxiZone('Zone Akwa - Rue Joss', 250, 8),
+    _TaxiZone('Zone Bonapriso - Boulevard', 600, 5),
+    _TaxiZone('Zone Deido - Marche', 1100, 12),
+    _TaxiZone('Zone Bali - Hopital Laquintinie', 1800, 3),
   ];
+
+  List<_TaxiZone> get _sortedZones {
+    final list = [..._zones];
+    if (_nearestFirst) {
+      list.sort((a, b) => a.distanceM.compareTo(b.distanceM));
+    } else {
+      list.sort((a, b) => b.availableDrivers.compareTo(a.availableDrivers));
+    }
+    return list;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final zones = _sortedZones;
+    final selected = _zones[_zoneIndex];
+    final stopSupplement = _stops.length * _stopFee;
+    final placesSupplement = (_places - 1) * (_baseFare ~/ 2);
+    final total = _baseFare + stopSupplement + placesSupplement;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reservation - Carlinq Taxi'),
@@ -34,53 +60,110 @@ class _ReservationTaxiScreenState extends State<ReservationTaxiScreen> {
         child: Column(
           children: [
             FakeMap(
-              height: 220,
-              markers: List.generate(
-                _zones.length,
-                (i) => FakeMarker(
-                  label: 'Z${i + 1}',
-                  alignment: Alignment(-0.6 + i * 0.4, -0.4 + i * 0.2),
-                  color: i == _zoneIndex
-                      ? AppColors.taxiOrange
-                      : AppColors.stopMarker,
-                  icon: Icons.local_taxi,
-                ),
-              ),
+              height: 190,
+              rounded: false,
+              showRoute: false,
+              markers: [
+                const FakeMarker(
+                    label: 'Vous',
+                    alignment: Alignment(-0.1, 0.55),
+                    color: AppColors.primary,
+                    icon: Icons.my_location),
+                for (var i = 0; i < _zones.length; i++)
+                  FakeMarker(
+                    label: 'Z${i + 1}',
+                    alignment: Alignment(-0.7 + i * 0.45, -0.5 + (i % 2) * 0.4),
+                    color: i == _zoneIndex
+                        ? AppColors.taxiOrange
+                        : AppColors.textSecondary,
+                    icon: Icons.local_taxi,
+                  ),
+              ],
             ),
-            const SizedBox(height: 8),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  const Text('Zones de stationnement disponibles',
-                      style: TextStyle(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 8),
-                  ..._zones.asMap().entries.map(
-                        (e) => _ZoneTile(
-                          zone: e.value,
-                          selected: _zoneIndex == e.key,
-                          onTap: () => setState(() => _zoneIndex = e.key),
-                        ),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text('Zones bordure de route',
+                            style: TextStyle(fontWeight: FontWeight.w800)),
                       ),
+                      ChoiceChip(
+                        label: const Text('Distance'),
+                        selected: _nearestFirst,
+                        onSelected: (_) => setState(() => _nearestFirst = true),
+                      ),
+                      const SizedBox(width: 6),
+                      ChoiceChip(
+                        label: const Text('Dispo'),
+                        selected: !_nearestFirst,
+                        onSelected: (_) =>
+                            setState(() => _nearestFirst = false),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ...zones.map((z) {
+                    final index = _zones.indexOf(z);
+                    return _ZoneTile(
+                      zone: z,
+                      selected: _zoneIndex == index,
+                      onTap: () => setState(() => _zoneIndex = index),
+                    );
+                  }),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Carlinq Taxi : prise en charge et depose en bordure de route uniquement.',
+                    style:
+                        TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  ),
                   const SizedBox(height: 16),
-                  const TextField(
-                    decoration: InputDecoration(
+                  TextField(
+                    controller: _destCtrl,
+                    decoration: const InputDecoration(
                       labelText: 'Adresse de destination',
+                      hintText: 'Ex. Carrefour Ndokoti',
                       prefixIcon: Icon(Icons.flag_outlined),
                     ),
                   ),
                   const SizedBox(height: 16),
+                  StopsEditor(
+                    stops: _stops,
+                    supplementPerStop: _stopFee,
+                    onChanged: (s) => setState(() => _stops = s),
+                  ),
+                  const SizedBox(height: 16),
                   const Text('Nombre de places',
                       style: TextStyle(fontWeight: FontWeight.w800)),
-                  Row(
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
                     children: [1, 2, 3, 4]
-                        .map((n) => Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: ChoiceChip(
-                                label: Text('$n'),
-                                selected: _places == n,
-                                onSelected: (_) => setState(() => _places = n),
-                              ),
+                        .map((n) => ChoiceChip(
+                              label: Text('$n place${n > 1 ? 's' : ''}'),
+                              selected: _places == n,
+                              onSelected: (_) => setState(() => _places = n),
+                            ))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Mode de paiement',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      'Portefeuille',
+                      'Orange Money',
+                      'MTN MoMo',
+                      'Especes (direct)'
+                    ]
+                        .map((p) => ChoiceChip(
+                              label: Text(p),
+                              selected: _payment == p,
+                              onSelected: (_) => setState(() => _payment = p),
                             ))
                         .toList(),
                   ),
@@ -93,12 +176,15 @@ class _ReservationTaxiScreenState extends State<ReservationTaxiScreen> {
                     ),
                     child: Column(
                       children: [
-                        _row('Tarif de base', '1800 XAF'),
-                        _row('Arrets intermediaires', '+0 XAF'),
-                        _row('Nombre de places', 'x $_places'),
+                        PriceLine('Tarif de base Carlinq Taxi', xaf(_baseFare)),
+                        for (var i = 0; i < _stops.length; i++)
+                          PriceLine('Arret ${i + 1} : ${_stops[i]}',
+                              '+${xaf(_stopFee)}'),
+                        if (_places > 1)
+                          PriceLine('Places supplementaires (${_places - 1})',
+                              '+${xaf(placesSupplement)}'),
                         const Divider(),
-                        _row('Total estime', '${1800 * _places} XAF',
-                            highlight: true),
+                        PriceLine('Total estime', xaf(total), highlight: true),
                       ],
                     ),
                   ),
@@ -108,11 +194,16 @@ class _ReservationTaxiScreenState extends State<ReservationTaxiScreen> {
                         backgroundColor: AppColors.taxiOrange),
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                          builder: (_) => const RideTrackingScreen()),
+                          builder: (_) => RideTrackingScreen(
+                                stops: _stops,
+                                destination: _destCtrl.text.isEmpty
+                                    ? 'Carrefour Ndokoti'
+                                    : _destCtrl.text,
+                                taxiZone: selected.name,
+                              )),
                     ),
                     icon: const Icon(Icons.directions_walk),
-                    label:
-                        Text('Reserver et rejoindre la zone'),
+                    label: Text('Reserver - rejoindre ${selected.shortName}'),
                   ),
                 ],
               ),
@@ -122,33 +213,18 @@ class _ReservationTaxiScreenState extends State<ReservationTaxiScreen> {
       ),
     );
   }
-
-  Widget _row(String label, String value, {bool highlight = false}) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label,
-                style: TextStyle(
-                  fontWeight: highlight ? FontWeight.w800 : FontWeight.w500,
-                  color: AppColors.textSecondary,
-                )),
-            Text(value,
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: highlight ? AppColors.taxiOrange : null,
-                  fontSize: highlight ? 16 : 14,
-                )),
-          ],
-        ),
-      );
 }
 
 class _TaxiZone {
-  const _TaxiZone(this.name, this.distance, this.availableDrivers);
+  const _TaxiZone(this.name, this.distanceM, this.availableDrivers);
   final String name;
-  final String distance;
+  final int distanceM;
   final int availableDrivers;
+
+  String get shortName => name.split(' - ').first;
+  String get distance => distanceM < 1000
+      ? '$distanceM m'
+      : '${(distanceM / 1000).toStringAsFixed(1)} km';
 }
 
 class _ZoneTile extends StatelessWidget {
@@ -178,7 +254,8 @@ class _ZoneTile extends StatelessWidget {
           child: Row(
             children: [
               Icon(Icons.local_taxi,
-                  color: selected ? AppColors.taxiOrange : AppColors.stopMarker),
+                  color:
+                      selected ? AppColors.taxiOrange : AppColors.textSecondary),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -187,14 +264,14 @@ class _ZoneTile extends StatelessWidget {
                     Text(zone.name,
                         style: const TextStyle(fontWeight: FontWeight.w700)),
                     Text(
-                        '${zone.distance} - ${zone.availableDrivers} chauffeurs',
+                        '${zone.distance} a pied - ${zone.availableDrivers} taxis disponibles',
                         style: const TextStyle(
                             fontSize: 12, color: AppColors.textSecondary)),
                   ],
                 ),
               ),
               if (selected)
-                Icon(Icons.check_circle, color: AppColors.taxiOrange),
+                const Icon(Icons.check_circle, color: AppColors.taxiOrange),
             ],
           ),
         ),

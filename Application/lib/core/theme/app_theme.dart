@@ -6,7 +6,8 @@ import 'app_colors.dart';
 class AppTheme {
   AppTheme._();
 
-  static ThemeData light() {
+  /// [googleFonts] a false utilise la police Roboto embarquee (tests hors ligne).
+  static ThemeData light({bool googleFonts = true}) {
     final base = ThemeData.light(useMaterial3: true);
     return base.copyWith(
       colorScheme: ColorScheme.fromSeed(
@@ -14,7 +15,9 @@ class AppTheme {
         brightness: Brightness.light,
       ),
       scaffoldBackgroundColor: AppColors.background,
-      textTheme: GoogleFonts.robotoTextTheme(base.textTheme),
+      textTheme: googleFonts
+          ? GoogleFonts.robotoTextTheme(base.textTheme)
+          : base.textTheme,
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
@@ -29,7 +32,8 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
+            fontFamily: googleFonts ? GoogleFonts.roboto().fontFamily : 'Roboto',
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -72,7 +76,10 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.background,
         selectedColor: AppColors.primary.withOpacity(0.15),
-        labelStyle: const TextStyle(color: AppColors.textPrimary),
+        labelStyle: TextStyle(
+          fontFamily: googleFonts ? GoogleFonts.roboto().fontFamily : 'Roboto',
+          color: AppColors.textPrimary,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: AppColors.divider),

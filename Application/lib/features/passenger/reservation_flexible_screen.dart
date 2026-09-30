@@ -5,10 +5,14 @@ import '../../core/models/user_role.dart';
 import '../../core/state/app_state.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/fake_map.dart';
+import '../../widgets/stops_editor.dart';
 import 'ride_tracking_screen.dart';
 
 class ReservationFlexibleScreen extends StatefulWidget {
-  const ReservationFlexibleScreen({super.key});
+  const ReservationFlexibleScreen({super.key, this.destination});
+
+  /// Destination pre-remplie (ex. Retour maison ou recherche).
+  final String? destination;
 
   @override
   State<ReservationFlexibleScreen> createState() =>
@@ -17,20 +21,32 @@ class ReservationFlexibleScreen extends StatefulWidget {
 
 class _ReservationFlexibleScreenState
     extends State<ReservationFlexibleScreen> {
-  final List<String> _stops = ['Marche Central', 'Pharmacie du Rond-Point'];
-  int _places = 2;
-  String _payment = 'Portefeuille';
-  bool _degradedRoute = true;
+  static const _baseFare = 2500;
+  static const _stopFee = 300;
+  // Route degradee detectee automatiquement sur le trajet (niveau 2 = +10%).
+  static const _degradedPercent = 10;
 
-  int get _baseCost => 2500 * context.read<AppState>().serviceClass.coefficient ~/ 1;
-  int get _stopSupplement => _stops.length * 300;
-  int get _degradedSupplement => _degradedRoute ? (_baseCost * 0.1).round() : 0;
-  int get _total =>
-      (_baseCost + _stopSupplement + _degradedSupplement) * _places;
+  List<String> _stops = ['Marche Central', 'Pharmacie du Rond-Point'];
+  int _places = 1;
+  String _payment = 'Portefeuille';
+  bool _pickupHome = true;
+  late final _destCtrl =
+      TextEditingController(text: widget.destination ?? 'Aeroport Douala Intl');
+
+  int _classFare(ServiceClass c) => (_baseFare * c.coefficient).round();
 
   @override
   Widget build(BuildContext context) {
-    final cls = context.watch<AppState>().serviceClass;
+    final app = context.watch<AppState>();
+    final cls = app.serviceClass;
+    final base = _classFare(cls);
+    final stopSupplement = _stops.length * _stopFee;
+    final degraded = base * _degradedPercent ~/ 100;
+    final placesSupplement = (_places - 1) * (base ~/ 2);
+    final total = base + stopSupplement + degraded + placesSupplement;
+    final walletTooLow =
+        _payment == 'Portefeuille' && app.walletBalance < 500;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reservation - Carlinq Flexible'),
@@ -40,186 +56,209 @@ class _ReservationFlexibleScreenState
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 8),
             FakeMap(
-              height: 220,
-              markers: const [
-                FakeMarker(
+              height: 190,
+              rounded: false,
+              markers: [
+                const FakeMarker(
                     label: 'Depart',
-                    alignment: Alignment(-0.6, 0.5),
-                    color: AppColors.classEco),
-                FakeMarker(
-                    label: 'Arret 1',
-                    alignment: Alignment(0.0, 0.1),
-                    color: AppColors.stopMarker),
-                FakeMarker(
-                    label: 'Arret 2',
-                    alignment: Alignment(0.3, -0.2),
-                    color: AppColors.stopMarker),
-                FakeMarker(
+                    alignment: Alignment(-0.7, 0.6),
+                    color: AppColors.classEco,
+                    icon: Icons.trip_origin),
+                for (var i = 0; i < _stops.length && i < 4; i++)
+                  FakeMarker(
+                      label: 'Arret ${i + 1}',
+                      alignment: Alignment(-0.3 + i * 0.3, 0.3 - i * 0.3),
+                      color: AppColors.stopMarker,
+                      icon: Icons.pin_drop),
+                const FakeMarker(
                     label: 'Destination',
-                    alignment: Alignment(0.7, -0.6),
-                    color: AppColors.taxiOrange),
+                    alignment: Alignment(0.75, -0.65),
+                    color: AppColors.taxiOrange,
+                    icon: Icons.flag),
               ],
             ),
             Expanded(
-              child: SingleChildScrollView(
+              child: ListView(
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Classe de service',
-                        style: TextStyle(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: ServiceClass.values
-                          .map((c) => Expanded(
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 4),
-                                  child: _ClassChip(
-                                    label: c.label,
-                                    coef: c.coefficient,
-                                    selected: c == cls,
-                                    onTap: () => context
-                                        .read<AppState>()
-                                        .setServiceClass(c),
-                                  ),
+                children: [
+                  const Text('Classe de service',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: ServiceClass.values
+                        .map((c) => Expanded(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 4),
+                                child: _ClassChip(
+                                  serviceClass: c,
+                                  fare: _classFare(c),
+                                  selected: c == cls,
+                                  onTap: () => context
+                                      .read<AppState>()
+                                      .setServiceClass(c),
                                 ),
-                              ))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 20),
-                    const _AddressBlock(
-                      icon: Icons.location_on,
-                      color: AppColors.classEco,
-                      label: 'Depart',
-                      value: 'Domicile (auto-detection)',
-                    ),
-                    const SizedBox(height: 8),
-                    ..._stops.asMap().entries.map(
-                          (e) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: _AddressBlock(
-                                    icon: Icons.pin_drop,
-                                    color: AppColors.stopMarker,
-                                    label: 'Arret ${e.key + 1}',
-                                    value: e.value,
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () => setState(() {
-                                    _stops.removeAt(e.key);
-                                  }),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 6),
+                  Text('Vehicules : ${cls.vehicle}',
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.textSecondary)),
+                  const SizedBox(height: 18),
+                  const Text('Prise en charge',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 8),
+                  SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(
+                          value: true,
+                          icon: Icon(Icons.my_location),
+                          label: Text('Domicile (GPS)')),
+                      ButtonSegment(
+                          value: false,
+                          icon: Icon(Icons.edit_location_alt_outlined),
+                          label: Text('Saisie libre')),
+                    ],
+                    selected: {_pickupHome},
+                    onSelectionChanged: (s) =>
+                        setState(() => _pickupHome = s.first),
+                  ),
+                  const SizedBox(height: 8),
+                  _pickupHome
+                      ? _AddressBlock(
+                          icon: Icons.trip_origin,
+                          color: AppColors.classEco,
+                          label: 'Depart - detecte automatiquement',
+                          value: app.passengerHome,
+                        )
+                      : const TextField(
+                          decoration: InputDecoration(
+                            labelText: 'Adresse de prise en charge',
+                            prefixIcon: Icon(Icons.trip_origin,
+                                color: AppColors.classEco),
                           ),
                         ),
-                    const _AddressBlock(
-                      icon: Icons.flag,
-                      color: AppColors.taxiOrange,
-                      label: 'Destination',
-                      value: 'Aeroport Douala Intl',
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _destCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Destination',
+                      prefixIcon: Icon(Icons.flag, color: AppColors.taxiOrange),
                     ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      onPressed: () => setState(
-                          () => _stops.add('Nouvel arret ${_stops.length + 1}')),
-                      icon: const Icon(Icons.add_location_alt_outlined),
-                      label: const Text('Ajouter un arret'),
+                  ),
+                  const SizedBox(height: 18),
+                  StopsEditor(
+                    stops: _stops,
+                    supplementPerStop: _stopFee,
+                    onChanged: (s) => setState(() => _stops = s),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.trafficBanner.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.trafficBanner),
                     ),
-                    const SizedBox(height: 16),
-                    const Text('Nombre de places',
-                        style: TextStyle(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [1, 2, 3, 4]
-                          .map((n) => Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: ChoiceChip(
-                                  label: Text('$n place${n > 1 ? 's' : ''}'),
-                                  selected: _places == n,
-                                  onSelected: (_) =>
-                                      setState(() => _places = n),
-                                ),
-                              ))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.trafficBanner.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border:
-                            Border.all(color: AppColors.trafficBanner),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.warning_amber,
-                              color: AppColors.trafficBanner),
-                          const SizedBox(width: 8),
-                          const Expanded(
-                            child: Text(
-                              'Route degradee detectee (+10%) - vehicule protege',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                          Switch(
-                            value: _degradedRoute,
-                            onChanged: (v) =>
-                                setState(() => _degradedRoute = v),
-                            activeColor: AppColors.trafficBanner,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Mode de paiement',
-                        style: TextStyle(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 8,
+                    child: const Row(
                       children: [
-                        'Portefeuille',
-                        'Orange Money',
-                        'MTN MoMo',
-                        'Especes (direct)'
-                      ]
-                          .map((p) => ChoiceChip(
-                                label: Text(p),
-                                selected: _payment == p,
-                                onSelected: (_) =>
-                                    setState(() => _payment = p),
-                              ))
-                          .toList(),
+                        Icon(Icons.warning_amber,
+                            color: AppColors.trafficBanner),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Route degradee detectee sur le trajet (niveau 2) : '
+                            'supplement automatique de +$_degradedPercent%.',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                    _PriceBreakdown(
-                      base: _baseCost,
-                      stopSupplement: _stopSupplement,
-                      degradedSupplement: _degradedSupplement,
-                      places: _places,
-                      total: _total,
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.flexibleBlue),
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (_) => const RideTrackingScreen()),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Nombre de places',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    children: [1, 2, 3, 4]
+                        .map((n) => ChoiceChip(
+                              label: Text('$n place${n > 1 ? 's' : ''}'),
+                              selected: _places == n,
+                              onSelected: (_) => setState(() => _places = n),
+                            ))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Mode de paiement',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      'Portefeuille',
+                      'Orange Money',
+                      'MTN MoMo',
+                      'Especes (direct)'
+                    ]
+                        .map((p) => ChoiceChip(
+                              label: Text(p),
+                              selected: _payment == p,
+                              onSelected: (_) => setState(() => _payment = p),
+                            ))
+                        .toList(),
+                  ),
+                  if (walletTooLow)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Solde insuffisant : minimum 500 XAF requis dans le portefeuille.',
+                        style: TextStyle(color: AppColors.danger, fontSize: 12),
                       ),
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: Text('Confirmer - $_total XAF'),
                     ),
-                  ],
-                ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      children: [
+                        PriceLine('Tarif de base (${cls.label})', xaf(base)),
+                        for (var i = 0; i < _stops.length; i++)
+                          PriceLine('Arret ${i + 1} : ${_stops[i]}',
+                              '+${xaf(_stopFee)}'),
+                        PriceLine('Route degradee (+$_degradedPercent%)',
+                            '+${xaf(degraded)}'),
+                        if (_places > 1)
+                          PriceLine('Places supplementaires (${_places - 1})',
+                              '+${xaf(placesSupplement)}'),
+                        const Divider(),
+                        PriceLine('Total estime', xaf(total), highlight: true),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.flexibleBlue),
+                    onPressed: walletTooLow
+                        ? null
+                        : () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (_) => RideTrackingScreen(
+                                        stops: _stops,
+                                        destination: _destCtrl.text,
+                                      )),
+                            ),
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: Text('Confirmer - ${xaf(total)}'),
+                  ),
+                ],
               ),
             ),
           ],
@@ -231,20 +270,26 @@ class _ReservationFlexibleScreenState
 
 class _ClassChip extends StatelessWidget {
   const _ClassChip(
-      {required this.label,
-      required this.coef,
+      {required this.serviceClass,
+      required this.fare,
       required this.selected,
       required this.onTap});
-  final String label;
-  final double coef;
+  final ServiceClass serviceClass;
+  final int fare;
   final bool selected;
   final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
-    final color = switch (label) {
-      'Eco' => AppColors.classEco,
-      'Serenity' => AppColors.classSerenity,
-      _ => AppColors.classPrestige,
+    final color = switch (serviceClass) {
+      ServiceClass.eco => AppColors.classEco,
+      ServiceClass.serenity => AppColors.classSerenity,
+      ServiceClass.prestige => AppColors.classPrestige,
+    };
+    final icon = switch (serviceClass) {
+      ServiceClass.eco => Icons.directions_car_outlined,
+      ServiceClass.serenity => Icons.directions_car,
+      ServiceClass.prestige => Icons.airport_shuttle,
     };
     return InkWell(
       onTap: onTap,
@@ -258,14 +303,13 @@ class _ClassChip extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(Icons.directions_car,
-                color: selected ? Colors.white : color, size: 24),
+            Icon(icon, color: selected ? Colors.white : color, size: 26),
             const SizedBox(height: 4),
-            Text(label,
+            Text(serviceClass.label,
                 style: TextStyle(
                     color: selected ? Colors.white : color,
                     fontWeight: FontWeight.w800)),
-            Text('x${coef.toStringAsFixed(1)}',
+            Text(xaf(fare),
                 style: TextStyle(
                     color: selected ? Colors.white70 : AppColors.textSecondary,
                     fontSize: 11)),
@@ -312,64 +356,6 @@ class _AddressBlock extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.drag_indicator, color: AppColors.textSecondary),
-        ],
-      ),
-    );
-  }
-}
-
-class _PriceBreakdown extends StatelessWidget {
-  const _PriceBreakdown(
-      {required this.base,
-      required this.stopSupplement,
-      required this.degradedSupplement,
-      required this.places,
-      required this.total});
-  final int base;
-  final int stopSupplement;
-  final int degradedSupplement;
-  final int places;
-  final int total;
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        children: [
-          _row('Tarif de base', '$base XAF'),
-          _row('Supplement arrets', '+$stopSupplement XAF'),
-          if (degradedSupplement > 0)
-            _row('Supplement route degradee', '+$degradedSupplement XAF'),
-          _row('Nombre de places', 'x $places'),
-          const Divider(),
-          _row('Total estime', '$total XAF', highlight: true),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(String label, String value, {bool highlight = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label,
-              style: TextStyle(
-                fontWeight: highlight ? FontWeight.w800 : FontWeight.w500,
-                color: highlight ? AppColors.textPrimary : AppColors.textSecondary,
-              )),
-          Text(value,
-              style: TextStyle(
-                fontWeight: highlight ? FontWeight.w800 : FontWeight.w600,
-                color: highlight ? AppColors.taxiOrange : null,
-                fontSize: highlight ? 16 : 14,
-              )),
         ],
       ),
     );

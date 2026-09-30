@@ -11,76 +11,96 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Image.asset('assets/images/logo.png'),
+        // Defilement sur petits ecrans, tout en gardant les Spacer.
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Image.asset('assets/images/logo.png'),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Carlinq',
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      const Text(
+                        'Bienvenue !',
+                        style: TextStyle(
+                            fontSize: 28, fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Deux modes de transport, une seule application.\nCarlinq Flexible (dans les quartiers) et Carlinq Taxi (bordure de route).',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 15,
+                            color: AppColors.textSecondary,
+                            height: 1.4),
+                      ),
+                      const SizedBox(height: 32),
+                      _FeatureRow(
+                        icon: Icons.location_on,
+                        color: AppColors.classEco,
+                        title: 'Arrets illimites repositionnables',
+                        subtitle:
+                            'Ajoutez et deplacez vos arrets par glisser-deposer',
+                      ),
+                      const SizedBox(height: 14),
+                      _FeatureRow(
+                        icon: Icons.traffic,
+                        color: AppColors.trafficBanner,
+                        title: 'Anti-embouteillage',
+                        subtitle: 'Itineraires alternatifs en 1 clic',
+                      ),
+                      const SizedBox(height: 14),
+                      _FeatureRow(
+                        icon: Icons.percent,
+                        color: AppColors.taxiOrange,
+                        title: 'Commission 8% seulement',
+                        subtitle:
+                            'vs 20% chez Yango - plus de revenus chauffeurs',
+                      ),
+                      const Spacer(),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (_) => const SignupRoleScreen()),
+                        ),
+                        child: const Text('Creer un compte'),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (_) => const LoginScreen()),
+                        ),
+                        child: const Text('J\'ai deja un compte'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Carlinq',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              const Text(
-                'Bienvenue !',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Deux modes de transport, une seule application.\nCarlinq Flexible (dans les quartiers) et Carlinq Taxi (bordure de route).',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, color: AppColors.textSecondary, height: 1.4),
-              ),
-              const SizedBox(height: 32),
-              _FeatureRow(
-                icon: Icons.location_on,
-                color: AppColors.classEco,
-                title: 'Arrets illimites repositionnables',
-                subtitle: 'Ajoutez et deplacez vos arrets par glisser-deposer',
-              ),
-              const SizedBox(height: 14),
-              _FeatureRow(
-                icon: Icons.traffic,
-                color: AppColors.trafficBanner,
-                title: 'Anti-embouteillage',
-                subtitle: 'Itineraires alternatifs en 1 clic',
-              ),
-              const SizedBox(height: 14),
-              _FeatureRow(
-                icon: Icons.percent,
-                color: AppColors.taxiOrange,
-                title: 'Commission 8% seulement',
-                subtitle: 'vs 20% chez Yango - plus de revenus chauffeurs',
-              ),
-              const Spacer(),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SignupRoleScreen()),
                 ),
-                child: const Text('Creer un compte'),
               ),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                ),
-                child: const Text('J\'ai deja un compte'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -125,7 +145,8 @@ class _FeatureRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
                 Text(subtitle,
                     style: const TextStyle(

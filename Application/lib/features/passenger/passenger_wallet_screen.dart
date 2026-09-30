@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/state/app_state.dart';
 import '../../core/theme/app_colors.dart';
+import '../../widgets/stops_editor.dart';
 
 class PassengerWalletScreen extends StatelessWidget {
   const PassengerWalletScreen({super.key});
@@ -33,7 +34,7 @@ class PassengerWalletScreen extends StatelessWidget {
                 const Text('Solde disponible',
                     style: TextStyle(color: Colors.white70)),
                 const SizedBox(height: 4),
-                Text('${app.walletBalance} XAF',
+                Text(xaf(app.walletBalance),
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 32,
@@ -47,6 +48,7 @@ class PassengerWalletScreen extends StatelessWidget {
                     Expanded(
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
                             backgroundColor: Colors.white,
                             foregroundColor: AppColors.primary),
                         onPressed: () => _showRechargeSheet(context),
@@ -60,7 +62,10 @@ class PassengerWalletScreen extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.white,
                             side: const BorderSide(color: Colors.white)),
-                        onPressed: () {},
+                        onPressed: () => ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(
+                                content: Text(
+                                    'Releve PDF du mois envoye par e-mail.'))),
                         icon: const Icon(Icons.receipt_long),
                         label: const Text('Releve'),
                       ),
@@ -101,57 +106,84 @@ class PassengerWalletScreen extends StatelessWidget {
 
   void _showRechargeSheet(BuildContext context) {
     final ctrl = TextEditingController(text: '5000');
+    var operator = 'Orange Money';
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Recharger votre portefeuille',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 12),
-            TextField(
-              controller: ctrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Montant (XAF)',
-                prefixIcon: Icon(Icons.attach_money),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (sheetCtx, setSheet) => Padding(
+          padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Recharger votre portefeuille',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 12),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(
+                      value: 'Orange Money',
+                      icon: Icon(Icons.phone_iphone, color: Colors.orange),
+                      label: Text('Orange Money')),
+                  ButtonSegment(
+                      value: 'MTN MoMo',
+                      icon: Icon(Icons.phone_iphone, color: Colors.amber),
+                      label: Text('MTN MoMo')),
+                ],
+                selected: {operator},
+                onSelectionChanged: (v) => setSheet(() => operator = v.first),
               ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              children: ['1000', '2000', '5000', '10000']
-                  .map((v) => ActionChip(
-                        label: Text('$v XAF'),
-                        onPressed: () => ctrl.text = v,
-                      ))
-                  .toList(),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () {
-                context
-                    .read<AppState>()
-                    .reloadWallet(int.tryParse(ctrl.text) ?? 0);
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content:
-                          Text('Rechargement effectue avec succes')),
-                );
-              },
-              icon: const Icon(Icons.check),
-              label: const Text('Valider avec Orange Money'),
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: ctrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Montant (XAF)',
+                  prefixIcon: Icon(Icons.payments_outlined),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                children: ['1000', '2000', '5000', '10000']
+                    .map((v) => ActionChip(
+                          label: Text('$v XAF'),
+                          onPressed: () => ctrl.text = v,
+                        ))
+                    .toList(),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Une demande de confirmation USSD sera envoyee sur votre telephone.',
+                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  final amount = int.tryParse(ctrl.text) ?? 0;
+                  if (amount < 500) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Montant minimum de recharge : 500 XAF')));
+                    return;
+                  }
+                  context.read<AppState>().reloadWallet(amount);
+                  Navigator.of(sheetCtx).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            'Recharge de $amount XAF via $operator effectuee')),
+                  );
+                },
+                icon: const Icon(Icons.check),
+                label: Text('Valider avec $operator'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -204,7 +236,7 @@ class _TxTile extends StatelessWidget {
         title: Text(label),
         subtitle: Text(date),
         trailing: Text(
-          '${positive ? '+' : ''}$value XAF',
+          '${positive ? '+' : ''}${xaf(value)}',
           style: TextStyle(
             fontWeight: FontWeight.w700,
             color: positive ? AppColors.classEco : AppColors.taxiOrange,

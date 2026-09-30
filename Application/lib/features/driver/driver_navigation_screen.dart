@@ -1,19 +1,67 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../widgets/fake_map.dart';
+import '../../widgets/stops_editor.dart';
+import '../passenger/chat_screen.dart';
+import 'driver_return_home_screen.dart';
+import 'driver_ride_end_screen.dart';
 
+/// Ecran 3 chauffeur - Navigation active (5.2.3).
 class DriverNavigationScreen extends StatefulWidget {
   const DriverNavigationScreen({super.key});
   @override
-  State<DriverNavigationScreen> createState() =>
-      _DriverNavigationScreenState();
+  State<DriverNavigationScreen> createState() => _DriverNavigationScreenState();
 }
 
 class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
-  bool _pauseActive = false;
-  bool _trafficActive = false;
+  static const _pauseRatePerMin = 50;
+  static const _trafficRatePerMin = 50;
+  static const _trafficToleranceSeconds = 180;
+
+  static const _stops = ['Pharmacie Bali', 'Ecole Publique Deido'];
+
+  Timer? _timer;
   bool _started = false;
+  bool _pauseActive = false;
+  int _pauseSeconds = 0;
+  bool _trafficActive = false;
+  int _trafficSeconds = 0;
+  int _stopsDone = 0;
+  String? _alternative;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      if (_pauseActive || _trafficActive) {
+        setState(() {
+          if (_pauseActive) _pauseSeconds++;
+          if (_trafficActive) _trafficSeconds++;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  int get _pauseSupplement =>
+      _pauseSeconds == 0 ? 0 : (_pauseSeconds / 60).ceil() * _pauseRatePerMin;
+
+  int get _trafficSupplement {
+    final billable = _trafficSeconds - _trafficToleranceSeconds;
+    return billable <= 0 ? 0 : (billable / 60).ceil() * _trafficRatePerMin;
+  }
+
+  String _chrono(int s) =>
+      '${(s ~/ 60).toString().padLeft(2, '0')}:${(s % 60).toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
@@ -27,25 +75,29 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
                   FakeMap(
                     height: double.infinity,
                     rounded: false,
-                    markers: const [
-                      FakeMarker(
+                    markers: [
+                      const FakeMarker(
                           label: 'Vous',
-                          alignment: Alignment(-0.4, 0.4),
+                          alignment: Alignment(-0.5, 0.6),
                           color: AppColors.classEco,
                           icon: Icons.directions_car),
-                      FakeMarker(
-                          label: 'Passager',
-                          alignment: Alignment(0.3, -0.2),
-                          color: AppColors.primary,
-                          icon: Icons.person),
-                      FakeMarker(
-                          label: 'Arret',
-                          alignment: Alignment(-0.1, 0.1),
-                          color: AppColors.stopMarker),
-                      FakeMarker(
+                      if (!_started)
+                        const FakeMarker(
+                            label: 'Passager',
+                            alignment: Alignment(-0.1, 0.35),
+                            color: AppColors.primary,
+                            icon: Icons.person),
+                      for (var i = _stopsDone; i < _stops.length; i++)
+                        FakeMarker(
+                            label: 'Arret ${i + 1}',
+                            alignment: Alignment(0.05 + i * 0.25, -0.05 - i * 0.25),
+                            color: AppColors.stopMarker,
+                            icon: Icons.pin_drop),
+                      const FakeMarker(
                           label: 'Destination',
-                          alignment: Alignment(0.6, -0.5),
-                          color: AppColors.taxiOrange),
+                          alignment: Alignment(0.65, -0.7),
+                          color: AppColors.taxiOrange,
+                          icon: Icons.flag),
                     ],
                   ),
                   Positioned(
@@ -56,28 +108,30 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
                       icon: const Icon(Icons.arrow_back),
                     ),
                   ),
-                  if (_trafficActive)
-                    Positioned(
-                      top: 12,
-                      left: 68,
-                      right: 12,
-                      child: _Banner(
-                        color: AppColors.trafficBanner,
-                        icon: Icons.traffic,
-                        text: 'Anti-embouteillage actif - 3 itineraires proposes',
-                      ),
+                  Positioned(
+                    top: 12,
+                    left: 68,
+                    right: 68,
+                    child: Column(
+                      children: [
+                        if (_trafficActive)
+                          _Banner(
+                            color: AppColors.trafficBanner,
+                            icon: Icons.traffic,
+                            text:
+                                'Embouteillage ${_chrono(_trafficSeconds)}${_alternative != null ? ' - $_alternative' : ''}'
+                                '${_trafficSupplement > 0 ? ' - +${xaf(_trafficSupplement)}' : ' - tolerance 3 min'}',
+                          ),
+                        if (_pauseActive)
+                          _Banner(
+                            color: AppColors.classPrestige,
+                            icon: Icons.pause_circle,
+                            text:
+                                'Pause Arret ${_chrono(_pauseSeconds)} - +${xaf(_pauseSupplement)}',
+                          ),
+                      ],
                     ),
-                  if (_pauseActive)
-                    Positioned(
-                      top: _trafficActive ? 76 : 12,
-                      left: 68,
-                      right: 12,
-                      child: _Banner(
-                        color: AppColors.classPrestige,
-                        icon: Icons.pause_circle,
-                        text: 'Pause Arret en cours - chrono 00:47',
-                      ),
-                    ),
+                  ),
                   Positioned(
                     right: 12,
                     top: 12,
@@ -87,19 +141,23 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
                             icon: Icons.location_searching,
                             color: AppColors.primary,
                             tooltip: 'Localiser le passager',
-                            onTap: () {}),
+                            onTap: () => _snack(
+                                'Passager localise : 120 m, portail bleu (GPS precis).')),
                         const SizedBox(height: 8),
                         _RoundBtn(
                             icon: Icons.chat_outlined,
                             color: AppColors.classEco,
                             tooltip: 'Messagerie',
-                            onTap: () {}),
+                            onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                    builder: (_) => const ChatScreen(
+                                        peerName: 'Aline Poko')))),
                         const SizedBox(height: 8),
                         _RoundBtn(
-                            icon: Icons.report_gmailerrorred,
+                            icon: Icons.add_road,
                             color: AppColors.danger,
-                            tooltip: 'Signaler route degradee',
-                            onTap: () {}),
+                            tooltip: 'Signaler une route degradee',
+                            onTap: _reportRoad),
                       ],
                     ),
                   ),
@@ -108,13 +166,10 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
             ),
             Container(
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.surface,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(20)),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black12, blurRadius: 12)
-                ],
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 12)],
               ),
               child: Column(
                 children: [
@@ -122,32 +177,62 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
                     children: [
                       const Icon(Icons.access_time, color: AppColors.primary),
                       const SizedBox(width: 6),
-                      const Text('ETA 6 min',
-                          style: TextStyle(fontWeight: FontWeight.w800)),
-                      const Spacer(),
-                      const Icon(Icons.pin_drop, color: AppColors.stopMarker),
-                      const SizedBox(width: 4),
-                      const Text('Arret 1 dans 2 min'),
+                      Expanded(
+                        child: Text(
+                            _started ? 'Arrivee 18 min' : 'Prise en charge 4 min',
+                            style: const TextStyle(fontWeight: FontWeight.w800)),
+                      ),
+                      const Text('Aline P. - Eco',
+                          style: TextStyle(
+                              fontSize: 12, color: AppColors.textSecondary)),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
+                  for (var i = 0; i < _stops.length; i++)
+                    _StopRow(
+                      index: i,
+                      label: _stops[i],
+                      done: i < _stopsDone,
+                      next: i == _stopsDone && _started,
+                      onValidate: () => setState(() => _stopsDone = i + 1),
+                    ),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () =>
-                              setState(() => _trafficActive = !_trafficActive),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.trafficBanner,
+                            side: const BorderSide(
+                                color: AppColors.trafficBanner),
+                          ),
+                          onPressed: _trafficActive
+                              ? () => setState(() {
+                                    _trafficActive = false;
+                                    _alternative = null;
+                                  })
+                              : _showAlternatives,
                           icon: const Icon(Icons.alt_route),
-                          label: const Text('Embouteillage'),
+                          label: Text(
+                              _trafficActive ? 'Fin bouchon' : 'Embouteillage'),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () =>
-                              setState(() => _pauseActive = !_pauseActive),
-                          icon: const Icon(Icons.pause),
-                          label: const Text('Pause Arret'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.classPrestige,
+                            side: const BorderSide(
+                                color: AppColors.classPrestige),
+                          ),
+                          onPressed: _started
+                              ? () =>
+                                  setState(() => _pauseActive = !_pauseActive)
+                              : null,
+                          icon: Icon(
+                              _pauseActive ? Icons.play_arrow : Icons.pause),
+                          label: Text(
+                              _pauseActive ? 'Reprendre' : 'Pause Arret'),
                         ),
                       ),
                     ],
@@ -157,7 +242,12 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: _started
+                              ? null
+                              : () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const DriverReturnHomeScreen())),
                           icon: const Icon(Icons.home_outlined),
                           label: const Text('Retour maison'),
                         ),
@@ -169,11 +259,9 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
                               backgroundColor: _started
                                   ? AppColors.danger
                                   : AppColors.classEco),
-                          onPressed: () => setState(() => _started = !_started),
+                          onPressed: _started ? _finish : () => setState(() => _started = true),
                           icon: Icon(_started ? Icons.flag : Icons.play_arrow),
-                          label: Text(_started
-                              ? 'Terminer la course'
-                              : 'Demarrer la course'),
+                          label: Text(_started ? 'Terminer' : 'Demarrer'),
                         ),
                       ),
                     ],
@@ -186,20 +274,172 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
       ),
     );
   }
+
+  void _snack(String text) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+
+  void _finish() {
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+      builder: (_) => DriverRideEndScreen(
+        pauseSupplement: _pauseSupplement,
+        trafficSupplement: _trafficSupplement,
+      ),
+    ));
+  }
+
+  /// Anti-embouteillage : 3 meilleurs itineraires alternatifs (Google Routes).
+  void _showAlternatives() {
+    const routes = [
+      ('Via Boulevard de la Liberte', '14 min', '-6 min', AppColors.classEco),
+      ('Via Rue Njo-Njo', '16 min', '-4 min', AppColors.classSerenity),
+      ('Via Pont de la Dibamba', '19 min', '-1 min', AppColors.classPrestige),
+    ];
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+              child: Text('3 itineraires non congestionnes',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                  'Le compteur de supplement embouteillage demarre apres 3 min de tolerance.',
+                  style:
+                      TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            ),
+            for (final r in routes)
+              ListTile(
+                leading: CircleAvatar(
+                    backgroundColor: r.$4.withOpacity(0.15),
+                    child: Icon(Icons.alt_route, color: r.$4)),
+                title: Text(r.$1),
+                subtitle: Text('${r.$2} - fluide'),
+                trailing: Text(r.$3,
+                    style: const TextStyle(
+                        color: AppColors.classEco,
+                        fontWeight: FontWeight.w800)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  setState(() {
+                    _trafficActive = true;
+                    _alternative = r.$1.replaceFirst('Via ', '');
+                  });
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.timer_outlined),
+              title: const Text('Rester sur l\'itineraire (compteur seul)'),
+              onTap: () {
+                Navigator.pop(ctx);
+                setState(() => _trafficActive = true);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _reportRoad() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Signaler une route degradee',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            ),
+            for (final l in const [
+              ('Niveau 1 - nids de poule legers', '+5%'),
+              ('Niveau 2 - chaussee abimee', '+10%'),
+              ('Niveau 3 - piste / impraticable par pluie', '+15%'),
+            ])
+              ListTile(
+                leading: const Icon(Icons.warning_amber,
+                    color: AppColors.trafficBanner),
+                title: Text(l.$1),
+                trailing: Text(l.$2,
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _snack('Signalement envoye pour validation admin (${l.$2}).');
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StopRow extends StatelessWidget {
+  const _StopRow(
+      {required this.index,
+      required this.label,
+      required this.done,
+      required this.next,
+      required this.onValidate});
+  final int index;
+  final String label;
+  final bool done;
+  final bool next;
+  final VoidCallback onValidate;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            Icon(done ? Icons.check_circle : Icons.pin_drop,
+                size: 18,
+                color: done ? AppColors.classEco : AppColors.stopMarker),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text('Arret ${index + 1} : $label',
+                  style: TextStyle(
+                      fontSize: 13,
+                      decoration: done ? TextDecoration.lineThrough : null)),
+            ),
+            if (done)
+              const Text('Passe',
+                  style: TextStyle(fontSize: 12, color: AppColors.classEco))
+            else if (next)
+              TextButton(
+                  style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact),
+                  onPressed: onValidate,
+                  child: const Text('Valider'))
+            else
+              const Text('En attente',
+                  style:
+                      TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          ],
+        ),
+      );
 }
 
 class _Banner extends StatelessWidget {
-  const _Banner(
-      {required this.color, required this.icon, required this.text});
+  const _Banner({required this.color, required this.icon, required this.text});
   final Color color;
   final IconData icon;
   final String text;
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(12),
+          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
         ),
         child: Row(
           children: [
@@ -208,7 +448,9 @@ class _Banner extends StatelessWidget {
             Expanded(
               child: Text(text,
                   style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w700)),
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12)),
             ),
           ],
         ),
