@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:carlinq_core/carlinq_core.dart';
@@ -6,6 +8,8 @@ import '../../core/state/app_state.dart';
 import 'driver_order_screen.dart';
 import 'driver_navigation_screen.dart';
 import 'driver_premium_screen.dart';
+import 'goal_share_screen.dart';
+import '../../core/goals/goal_share.dart';
 import 'driver_return_home_screen.dart';
 
 class DriverDashboardScreen extends StatefulWidget {
@@ -15,11 +19,85 @@ class DriverDashboardScreen extends StatefulWidget {
 }
 
 class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
-  bool _online = true;
+  bool _demoOnline = true;
+  Timer? _poll;
+
+  @override
+  void initState() {
+    super.initState();
+    // Mode connecte : statistiques, quota et offres rafraichis toutes les 5 s.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
+    _poll = Timer.periodic(const Duration(seconds: 5), (_) => _refresh());
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _refresh() async {
+    if (!mounted) return;
+    final app = context.read<AppState>();
+    if (!app.live) return;
+    try {
+      await app.refreshDashboard();
+      await app.pollOffers();
+    } catch (_) {
+      // Reseau instable : nouvel essai au prochain cycle.
+    }
+  }
+
+  void _snack(String text) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+
+  Future<void> _toggleOnline(AppState app, bool value) async {
+    if (!app.live) {
+      setState(() => _demoOnline = value);
+      return;
+    }
+    try {
+      await app.setOnline(value);
+      if (value) await app.pollOffers();
+    } catch (e) {
+      _snack(apiErrorMessage(e));
+    }
+  }
+
+  Future<void> _accept(AppState app, Map<String, dynamic>? offer) async {
+    if (offer == null) {
+      Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const DriverNavigationScreen()));
+      return;
+    }
+    try {
+      final ride = await app.acceptOffer(offer['id'] as int);
+      if (!mounted) return;
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => DriverNavigationScreen(ride: ride)));
+    } catch (e) {
+      _snack(apiErrorMessage(e));
+    }
+  }
+
+  Future<void> _refuse(AppState app, Map<String, dynamic>? offer) async {
+    try {
+      final penalty = offer == null
+          ? await app.refuseOffer(0)
+          : await app.refuseOffer(offer['id'] as int);
+      _snack(penalty
+          ? 'Quota de refus epuise : -5 points.'
+          : 'Commande refusee - deduite de la fenetre de refus.');
+    } catch (e) {
+      _snack(apiErrorMessage(e));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
+    final isOnline = app.live ? app.online : _demoOnline;
+    final offer = app.live && app.offers.isNotEmpty ? app.offers.first : null;
     final role = app.role;
     final color = role == UserRole.copilote
         ? AppColors.copiloteRole
@@ -48,16 +126,16 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
           ),
           Row(
             children: [
-              Text(_online ? 'En ligne' : 'Hors ligne',
+              Text(isOnline ? 'En ligne' : 'Hors ligne',
                   style: TextStyle(
-                      color: _online
+                      color: isOnline
                           ? AppColors.classEco
                           : AppColors.textSecondary,
                       fontWeight: FontWeight.w700)),
               Switch(
-                value: _online,
+                value: isOnline,
                 activeColor: AppColors.classEco,
-                onChanged: (v) => setState(() => _online = v),
+                onChanged: (v) => _toggleOnline(app, v),
               ),
             ],
           ),
@@ -84,18 +162,19 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                 const Text('Revenus de la journee',
                     style: TextStyle(color: Colors.white70)),
                 const SizedBox(height: 4),
-                const Text('18 500 XAF',
+                Text(xaf(app.todayEarnings),
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: 30,
                         fontWeight: FontWeight.w800)),
-                const Text('Semaine : 112 400 XAF',
+                Text('Semaine : ${xaf(app.weekEarnings)}',
                     style: TextStyle(
                         color: Colors.white, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    _MiniInfo(label: '12 courses', icon: Icons.route),
+                    _MiniInfo(
+                        label: '${app.todayRides} courses', icon: Icons.route),
                     const SizedBox(width: 16),
                     _MiniInfo(label: '4h 30', icon: Icons.timer),
                     const SizedBox(width: 16),
@@ -120,13 +199,18 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _StatCard(
-                  title: 'Objectif hebdo',
-                  value: '${app.weeklyProgress}',
-                  suffix: '/ ${app.weeklyGoal}',
-                  icon: Icons.flag_outlined,
-                  color: AppColors.classEco,
-                  progress: app.weeklyProgress / app.weeklyGoal,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const GoalShareScreen())),
+                  child: _StatCard(
+                    title: 'Objectif hebdo',
+                    value: '${app.weeklyProgress}',
+                    suffix: '/ ${app.weeklyGoal}',
+                    icon: Icons.flag_outlined,
+                    color: AppColors.classEco,
+                    progress: app.weeklyProgress / app.weeklyGoal,
+                  ),
                 ),
               ),
             ],
@@ -153,7 +237,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          if (!_online)
+          if (!isOnline)
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -172,22 +256,33 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                 ],
               ),
             ),
-          if (_online)
-            _IncomingOrderCard(
-              onRefuse: () {
-                final penalty = app.refusalSecondsLeft < 60;
-                context.read<AppState>().refuseOrder();
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(penalty
-                        ? 'Quota de refus epuise : -5 points.'
-                        : 'Commande refusee - 1 min deduite du quota.')));
-              },
-              onAccept: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                    builder: (_) => const DriverNavigationScreen()),
+          if (isOnline && app.live && offer == null)
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.classEco.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(14),
               ),
+              child: const Row(
+                children: [
+                  SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2)),
+                  SizedBox(width: 10),
+                  Expanded(
+                      child: Text('En ligne : en attente de commandes...')),
+                ],
+              ),
+            ),
+          if (isOnline && (!app.live || offer != null))
+            _IncomingOrderCard(
+              offer: offer,
+              onRefuse: () => _refuse(app, offer),
+              onAccept: () => _accept(app, offer),
               onOpen: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const DriverOrderScreen()),
+                MaterialPageRoute(
+                    builder: (_) => DriverOrderScreen(offer: offer)),
               ),
             ),
           const SizedBox(height: 12),
@@ -198,6 +293,25 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
             label: const Text('Retour maison'),
           ),
           const SizedBox(height: 16),
+          if (app.incomingShares
+              .any((s) => s.status == ShareStatus.pending)) ...[
+            Card(
+              color: AppColors.classPrestige.withOpacity(0.08),
+              child: ListTile(
+                leading: const Icon(Icons.handshake_outlined,
+                    color: AppColors.classPrestige),
+                title: const Text("Demande de partage d'objectif",
+                    style: TextStyle(fontWeight: FontWeight.w800)),
+                subtitle: Text(
+                    '${app.incomingShares.firstWhere((s) => s.status == ShareStatus.pending).ownerName} '
+                    'vous propose une part de son bonus.'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const GoalShareScreen(initialTab: 1))),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           _QuotaCard(secondsLeft: app.refusalSecondsLeft),
           if (role == UserRole.copilote) ...[
             const SizedBox(height: 16),
@@ -288,12 +402,24 @@ class _StatCard extends StatelessWidget {
 
 class _IncomingOrderCard extends StatelessWidget {
   const _IncomingOrderCard(
-      {required this.onAccept, required this.onOpen, required this.onRefuse});
+      {required this.onAccept,
+      required this.onOpen,
+      required this.onRefuse,
+      this.offer});
+  final Map<String, dynamic>? offer;
   final VoidCallback onAccept;
   final VoidCallback onRefuse;
   final VoidCallback onOpen;
   @override
   Widget build(BuildContext context) {
+    final o = offer;
+    final modeLabel = o == null
+        ? 'Carlinq Flexible - Eco'
+        : o['mode'] == 'taxi'
+            ? 'Carlinq Taxi'
+            : 'Carlinq Flexible - ${o['service_class']}';
+    final stops = o == null ? 2 : (o['stops'] as List).length;
+    final stopSup = o == null ? 600 : (o['stop_supplement_xaf'] as num).toInt();
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -317,29 +443,38 @@ class _IncomingOrderCard extends StatelessWidget {
                 decoration: BoxDecoration(
                     color: AppColors.classEco,
                     borderRadius: BorderRadius.circular(10)),
-                child: const Text('Carlinq Flexible - Eco',
-                    style: TextStyle(color: Colors.white, fontSize: 11)),
+                child: Text(modeLabel,
+                    style: const TextStyle(color: Colors.white, fontSize: 11)),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          const _Row(icon: Icons.person, label: 'Passager', value: 'Aline P.'),
-          const _Row(
+          _Row(
+              icon: Icons.person,
+              label: 'Passager',
+              value: o == null ? 'Aline P.' : o['passenger_name'] as String),
+          _Row(
               icon: Icons.location_on,
               label: 'Prise en charge',
-              value: 'Bonanjo, 2.1 km'),
-          const _Row(
+              value: o == null
+                  ? 'Bonanjo, 2.1 km'
+                  : (o['pickup_label'] as String? ?? '-')),
+          _Row(
               icon: Icons.flag_outlined,
               label: 'Destination',
-              value: 'Marche Central'),
-          const _Row(
+              value: o == null
+                  ? 'Marche Central'
+                  : (o['destination_label'] as String? ?? '-')),
+          _Row(
               icon: Icons.pin_drop,
               label: 'Arrets declares',
-              value: '2 arrets (+ 600 XAF)'),
-          const _Row(
+              value: '$stops arret(s) (+ ${xaf(stopSup)})'),
+          _Row(
               icon: Icons.attach_money,
               label: 'Montant estime',
-              value: '3 200 XAF'),
+              value: o == null
+                  ? '3 200 XAF'
+                  : xaf((o['total_xaf'] as num).toInt())),
           const SizedBox(height: 12),
           Row(
             children: [

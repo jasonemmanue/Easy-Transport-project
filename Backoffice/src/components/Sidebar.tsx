@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Map, Users, Car, MapPin, Route, DollarSign,
-  Bell, AlertTriangle, BarChart2, Settings, ShieldCheck, MessageSquareWarning
+  Bell, AlertTriangle, BarChart2, Settings, ShieldCheck, MessageSquareWarning, Handshake
 } from "lucide-react";
 
 const nav = [
@@ -15,6 +15,7 @@ const nav = [
   { href: "/zones", label: "Zones Carlinq Taxi", icon: MapPin },
   { href: "/routes", label: "Routes degradees", icon: Route },
   { href: "/pricing", label: "Tarifs & Supplements", icon: DollarSign },
+  { href: "/goals", label: "Objectifs & partages", icon: Handshake },
   { href: "/disputes", label: "Litiges Pause Arret", icon: MessageSquareWarning },
   { href: "/notifications", label: "Notifications push", icon: Bell },
   { href: "/moderation", label: "Moderation", icon: AlertTriangle },

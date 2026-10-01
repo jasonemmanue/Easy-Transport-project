@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:carlinq_core/carlinq_core.dart';
 
+import '../../core/state/app_state.dart';
 import '../shared/main_shell.dart';
+import 'session_router.dart';
 
 /// Compte chauffeur (Drivers / Copilote) en attente de validation manuelle
 /// par un administrateur avant activation.
@@ -53,15 +56,40 @@ class PendingValidationScreen extends StatelessWidget {
               label: const Text('Contacter le support'),
             ),
             const SizedBox(height: 10),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(backgroundColor: color),
-              onPressed: () => Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const MainShell()),
-                (_) => false,
+            if (context.watch<AppState>().live)
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: color),
+                onPressed: () async {
+                  final app = context.read<AppState>();
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    await app.refreshDriver();
+                    if (app.approved) {
+                      await app.refreshAll();
+                      if (context.mounted) goHome(context, app);
+                    } else {
+                      messenger.showSnackBar(SnackBar(
+                          content: Text(
+                              'Dossier toujours en cours (statut : ${app.validationStatus}).')));
+                    }
+                  } catch (e) {
+                    messenger.showSnackBar(
+                        SnackBar(content: Text(apiErrorMessage(e))));
+                  }
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Verifier le statut du dossier'),
+              )
+            else
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: color),
+                onPressed: () => Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const MainShell()),
+                  (_) => false,
+                ),
+                icon: const Icon(Icons.verified_outlined),
+                label: const Text('Valider (demo admin)'),
               ),
-              icon: const Icon(Icons.verified_outlined),
-              label: const Text('Valider (demo admin)'),
-            ),
           ],
         ),
       ),

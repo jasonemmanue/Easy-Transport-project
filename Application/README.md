@@ -23,8 +23,31 @@ Maquettes, captures et correspondance avec le cahier des charges : **[docs/MAQUE
 ```bash
 cd passager      # ou cd chauffeur
 flutter pub get
-flutter run -d <device>
+flutter run -d <device> --dart-define=CARLINQ_API_URL=http://10.0.2.2:8010
 ```
+
+## Connexion à l'API
+
+Les deux apps appellent l'API FastAPI (`../API`, `docker compose up -d`) via `ApiClient` (`carlinq_core`,
+`dart:io`, rafraîchissement automatique du jeton). Deux modes :
+
+| Mode | Entrée | Données |
+|---|---|---|
+| **Connecté** | Connexion / inscription | API réelle : comptes, devis serveur, courses, suivi (polling 3 s), portefeuille, objectifs et partage, offres chauffeur (polling 5 s) |
+| **Démo** | « Explorer en mode démo » | Données embarquées, sans réseau (présentations) |
+
+Adresse du serveur :
+- au build : `--dart-define=CARLINQ_API_URL=http://<IP-du-PC>:8010` (défaut : `http://10.0.2.2:8010`, l'émulateur Android) ;
+- dans l'app : écran de connexion → icône **Serveur API** (test de connexion puis enregistrement).
+
+Téléphone réel : même Wi-Fi que le PC qui fait tourner Docker, et port 8010 autorisé dans le pare-feu Windows
+(trafic HTTP en clair autorisé via `usesCleartextTraffic` : à remplacer par HTTPS en production).
+
+Comptes de démo (mot de passe `Carlinq2026!`) : passager `+237690000001`, chauffeur `+237670000001`
+(Kevin Kamga, objectif partagé avec Prisca), voir `../API/README.md`.
+
+Les adresses saisies sont converties en coordonnées par un petit référentiel des quartiers de Douala
+(`carlinq_core/lib/src/api/places.dart`) en attendant Google Places.
 
 ## Tests
 
@@ -38,12 +61,21 @@ flutter test      # démarrage de l'app + smoke test des écrans à 360 dp
 Les tests chargent les vraies polices Roboto / MaterialIcons du SDK Flutter (`carlinq_core/lib/testing.dart`) :
 un débordement détecté correspond à un vrai téléphone de 360 dp.
 
+Tests de bout en bout contre l'API réelle (Docker démarré) :
+
+```bash
+flutter test test/api_e2e_test.dart --dart-define=API_E2E=true --dart-define=CARLINQ_API_URL=http://localhost:8010
+```
+
+- chauffeur : inscription → profil véhicule → validation admin → en ligne → offre → course complète → objectif → invitation d'un aidant ;
+- passager : inscription → recharge → devis → commande → course menée par un chauffeur de démo → paiement → notation.
+
 ## Build des APK
 
 ```bash
 cd passager      # puis cd ../chauffeur
-flutter build apk --release                  # APK universel
-flutter build apk --release --split-per-abi  # un APK par architecture
+flutter build apk --release --dart-define=CARLINQ_API_URL=http://192.168.1.33:8010
+flutter build apk --release --split-per-abi --dart-define=CARLINQ_API_URL=http://192.168.1.33:8010
 ```
 
 Sorties dans `<app>/build/app/outputs/flutter-apk/` :

@@ -28,8 +28,82 @@ class _ReservationFlexibleScreenState extends State<ReservationFlexibleScreen> {
   bool _pickupHome = true;
   late final _destCtrl =
       TextEditingController(text: widget.destination ?? 'Aeroport Douala Intl');
+  final _pickupCtrl = TextEditingController(text: 'Akwa');
+
+  // Devis serveur (mode connecte) : recalcule quand les entrees changent.
+  Map<String, dynamic>? _quote;
+  String? _quoteKey;
+  bool _submitting = false;
 
   int _classFare(ServiceClass c) => (_baseFare * c.coefficient).round();
+
+  String _pickupLabel(AppState app) =>
+      _pickupHome ? app.passengerHome : _pickupCtrl.text;
+
+  void _maybeRefreshQuote(AppState app) {
+    if (!app.live) return;
+    final key = [
+      app.serviceClass.name,
+      _pickupLabel(app),
+      _destCtrl.text,
+      _stops.join('|'),
+      _places
+    ].join('#');
+    if (key == _quoteKey) return;
+    _quoteKey = key;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        final q = await app.estimate(
+          mode: CarlinqMode.flexible,
+          serviceClass: app.serviceClass,
+          pickup: _pickupLabel(app),
+          destination: _destCtrl.text,
+          stops: _stops,
+          places: _places,
+        );
+        if (mounted && key == _quoteKey) setState(() => _quote = q);
+      } catch (_) {
+        // Devis local conserve si l'API ne repond pas.
+      }
+    });
+  }
+
+  Future<void> _confirm(AppState app) async {
+    if (!app.live) {
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => RideTrackingScreen(
+                stops: _stops,
+                destination: _destCtrl.text,
+              )));
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      final ride = await app.createRide(
+        mode: CarlinqMode.flexible,
+        serviceClass: app.serviceClass,
+        pickup: _pickupLabel(app),
+        destination: _destCtrl.text,
+        stops: _stops,
+        places: _places,
+        paymentMethod: paymentMethodFor(_payment),
+      );
+      if (!mounted) return;
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => RideTrackingScreen(
+                stops: _stops,
+                destination: _destCtrl.text,
+                initialRide: ride,
+              )));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(apiErrorMessage(e))));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +113,20 @@ class _ReservationFlexibleScreenState extends State<ReservationFlexibleScreen> {
     final stopSupplement = _stops.length * _stopFee;
     final degraded = base * _degradedPercent ~/ 100;
     final placesSupplement = (_places - 1) * (base ~/ 2);
-    final total = base + stopSupplement + degraded + placesSupplement;
+    _maybeRefreshQuote(app);
+    final q = _quote;
+    final shownBase = q != null ? q['base_xaf'] as int : base;
+    final shownStopFee =
+        q != null ? q['stop_supplement_per_stop_xaf'] as int : _stopFee;
+    final shownDegradedPct =
+        q != null ? q['degraded_percent'] as int : _degradedPercent;
+    final shownDegraded =
+        q != null ? q['degraded_supplement_xaf'] as int : degraded;
+    final shownPlaces =
+        q != null ? q['places_supplement_xaf'] as int : placesSupplement;
+    final total = q != null
+        ? q['total_xaf'] as int
+        : base + stopSupplement + degraded + placesSupplement;
     final walletTooLow = _payment == 'Portefeuille' && app.walletBalance < 500;
 
     return Scaffold(
@@ -129,8 +216,10 @@ class _ReservationFlexibleScreenState extends State<ReservationFlexibleScreen> {
                           label: 'Depart - detecte automatiquement',
                           value: app.passengerHome,
                         )
-                      : const TextField(
-                          decoration: InputDecoration(
+                      : TextField(
+                          controller: _pickupCtrl,
+                          onChanged: (_) => setState(() {}),
+                          decoration: const InputDecoration(
                             labelText: 'Adresse de prise en charge',
                             prefixIcon: Icon(Icons.trip_origin,
                                 color: AppColors.classEco),
@@ -139,6 +228,7 @@ class _ReservationFlexibleScreenState extends State<ReservationFlexibleScreen> {
                   const SizedBox(height: 10),
                   TextField(
                     controller: _destCtrl,
+                    onChanged: (_) => setState(() {}),
                     decoration: const InputDecoration(
                       labelText: 'Destination',
                       prefixIcon: Icon(Icons.flag, color: AppColors.taxiOrange),
@@ -223,17 +313,24 @@ class _ReservationFlexibleScreenState extends State<ReservationFlexibleScreen> {
                     ),
                     child: Column(
                       children: [
-                        PriceLine('Tarif de base (${cls.label})', xaf(base)),
+                        PriceLine(
+                            'Tarif de base (${cls.label})', xaf(shownBase)),
                         for (var i = 0; i < _stops.length; i++)
                           PriceLine('Arret ${i + 1} : ${_stops[i]}',
-                              '+${xaf(_stopFee)}'),
-                        PriceLine('Route degradee (+$_degradedPercent%)',
-                            '+${xaf(degraded)}'),
+                              '+${xaf(shownStopFee)}'),
+                        if (shownDegradedPct > 0)
+                          PriceLine('Route degradee (+$shownDegradedPct%)',
+                              '+${xaf(shownDegraded)}'),
                         if (_places > 1)
                           PriceLine('Places supplementaires (${_places - 1})',
-                              '+${xaf(placesSupplement)}'),
+                              '+${xaf(shownPlaces)}'),
                         const Divider(),
-                        PriceLine('Total estime', xaf(total), highlight: true),
+                        PriceLine(
+                            q != null
+                                ? 'Total (devis serveur)'
+                                : 'Total estime',
+                            xaf(total),
+                            highlight: true),
                       ],
                     ),
                   ),
@@ -241,15 +338,9 @@ class _ReservationFlexibleScreenState extends State<ReservationFlexibleScreen> {
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.flexibleBlue),
-                    onPressed: walletTooLow
+                    onPressed: walletTooLow || _submitting
                         ? null
-                        : () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                  builder: (_) => RideTrackingScreen(
-                                        stops: _stops,
-                                        destination: _destCtrl.text,
-                                      )),
-                            ),
+                        : () => _confirm(app),
                     icon: const Icon(Icons.check_circle_outline),
                     label: Text('Confirmer - ${xaf(total)}'),
                   ),
@@ -356,3 +447,11 @@ class _AddressBlock extends StatelessWidget {
     );
   }
 }
+
+/// Libelle de paiement -> valeur de l'API.
+String paymentMethodFor(String label) => switch (label) {
+      'Orange Money' => 'orange_money',
+      'MTN MoMo' => 'mtn_momo',
+      'Especes (direct)' => 'cash',
+      _ => 'wallet',
+    };

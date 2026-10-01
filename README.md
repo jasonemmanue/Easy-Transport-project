@@ -54,6 +54,13 @@ flutter build apk --release --split-per-abi
 
 Maquettes UI/UX des deux apps (captures + correspondance au cahier des charges §5) : [Application/docs/MAQUETTES.md](Application/docs/MAQUETTES.md).
 
+### API + base de données + cache (Docker)
+```bash
+cd API
+docker compose up --build -d     # API http://localhost:8010/docs - PostgreSQL 55432 - Redis 56379
+docker compose run --rm api pytest
+```
+
 ### Backoffice (Next.js)
 ```bash
 cd Backoffice
@@ -61,17 +68,7 @@ npm install
 npm run dev
 ```
 
-### API (FastAPI)
-```bash
-cd API
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-copy .env.example .env
-uvicorn app.main:app --reload
-```
-
-Ou en Docker : `cd API && docker compose up`.
+Détails de l'API (routes, comptes de démo, partage d'objectif, cache Redis) : [API/README.md](API/README.md).
 
 ## Charte graphique
 

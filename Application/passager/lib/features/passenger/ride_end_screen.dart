@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:carlinq_core/carlinq_core.dart';
+
+import '../../core/state/app_state.dart';
 
 class RideEndScreen extends StatefulWidget {
   const RideEndScreen({
@@ -9,7 +12,11 @@ class RideEndScreen extends StatefulWidget {
     this.trafficSupplement = 200,
     this.pauseSeconds = 94,
     this.pauseSupplement = 100,
+    this.ride,
   });
+
+  /// Course terminee renvoyee par l'API (montants reels). Null en demo.
+  final Map<String, dynamic>? ride;
 
   final int stopsCount;
   final int trafficMinutes;
@@ -32,15 +39,70 @@ class _RideEndScreenState extends State<RideEndScreen> {
   String _payment = 'Portefeuille';
   final _commentCtrl = TextEditingController();
 
+  int _v(String key) => ((widget.ride![key] as num?) ?? 0).toInt();
+
+  String get _distance => widget.ride == null
+      ? '8,4 km'
+      : '${(widget.ride!['distance_km'] as num).toStringAsFixed(1).replaceAll('.', ',')} km';
+
+  String get _duration {
+    final r = widget.ride;
+    if (r == null || r['started_at'] == null || r['completed_at'] == null)
+      return '24 min';
+    final d = DateTime.parse(r['completed_at'] as String)
+        .difference(DateTime.parse(r['started_at'] as String));
+    return '${d.inMinutes.clamp(1, 999)} min';
+  }
+
+  String get _class => widget.ride == null
+      ? 'Serenity'
+      : (widget.ride!['service_class'] as String?) ?? 'Taxi';
+
+  Future<void> _submit(int total) async {
+    final r = widget.ride;
+    final messenger = ScaffoldMessenger.of(context);
+    if (r != null) {
+      final app = context.read<AppState>();
+      try {
+        await app.rateRide(
+            r['id'] as int, _rating, _tags.toList(), _commentCtrl.text);
+        if (_contestPause) {
+          await app.openDispute(r['id'] as int, 'pause_arret',
+              description:
+                  'Contestation de la Pause Arret depuis l\'app passager');
+        }
+      } catch (e) {
+        messenger.showSnackBar(SnackBar(content: Text(apiErrorMessage(e))));
+        return;
+      }
+    }
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    messenger.showSnackBar(SnackBar(
+        content: Text(_contestPause
+            ? 'Merci ! Contestation transmise a l\'arbitrage.'
+            : 'Merci pour votre note de $_rating/5 !')));
+  }
+
+  @override
   @override
   Widget build(BuildContext context) {
-    final stopsSupplement = widget.stopsCount * _stopFee;
-    final total = _base +
-        stopsSupplement +
-        _degraded +
-        widget.trafficSupplement +
-        widget.pauseSupplement;
-    final hasPause = widget.pauseSeconds > 0;
+    final live = widget.ride != null;
+    final base = live ? _v('base_xaf') + _v('places_supplement_xaf') : _base;
+    final stopsCount =
+        live ? (widget.ride!['stops'] as List).length : widget.stopsCount;
+    final stopsSupplement =
+        live ? _v('stop_supplement_xaf') : widget.stopsCount * _stopFee;
+    final degraded = live ? _v('degraded_supplement_xaf') : _degraded;
+    final degradedPct = live ? _v('degraded_percent') : 10;
+    final traffic =
+        live ? _v('traffic_supplement_xaf') : widget.trafficSupplement;
+    final pause = live ? _v('pause_supplement_xaf') : widget.pauseSupplement;
+    final pauseCount = live ? (widget.ride!['pauses'] as List).length : 1;
+    final total = live
+        ? _v('total_xaf')
+        : base + stopsSupplement + degraded + traffic + pause;
+    final hasPause = live ? pauseCount > 0 : widget.pauseSeconds > 0;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Course terminee'),
@@ -70,14 +132,14 @@ class _RideEndScreenState extends State<RideEndScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            const Row(
+            Row(
               children: [
-                Expanded(child: _Metric('Distance', '8,4 km', Icons.route)),
-                SizedBox(width: 8),
-                Expanded(child: _Metric('Duree', '24 min', Icons.timer)),
-                SizedBox(width: 8),
+                Expanded(child: _Metric('Distance', _distance, Icons.route)),
+                const SizedBox(width: 8),
+                Expanded(child: _Metric('Duree', _duration, Icons.timer)),
+                const SizedBox(width: 8),
                 Expanded(
-                    child: _Metric('Classe', 'Serenity', Icons.directions_car)),
+                    child: _Metric('Classe', _class, Icons.directions_car)),
               ],
             ),
             const SizedBox(height: 16),
@@ -90,16 +152,15 @@ class _RideEndScreenState extends State<RideEndScreen> {
                     const Text('Detail du prix final',
                         style: TextStyle(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 8),
-                    PriceLine('Tarif de base', xaf(_base)),
-                    PriceLine('Arrets pre-declares (${widget.stopsCount})',
+                    PriceLine('Tarif de base', xaf(base)),
+                    PriceLine('Arrets pre-declares ($stopsCount)',
                         '+${xaf(stopsSupplement)}'),
-                    PriceLine(
-                        'Arrets impromptus (Pause Arret ${(widget.pauseSeconds / 60).ceil()} min)',
-                        '+${xaf(widget.pauseSupplement)}'),
-                    PriceLine('Route degradee (+10%)', '+${xaf(_degraded)}'),
-                    PriceLine(
-                        'Embouteillage / emballage (${widget.trafficMinutes} min)',
-                        '+${xaf(widget.trafficSupplement)}'),
+                    PriceLine('Arrets impromptus (Pause Arret x$pauseCount)',
+                        '+${xaf(pause)}'),
+                    if (degraded > 0)
+                      PriceLine('Route degradee (+$degradedPct%)',
+                          '+${xaf(degraded)}'),
+                    PriceLine('Embouteillage / emballage', '+${xaf(traffic)}'),
                     const Divider(),
                     PriceLine('Total', xaf(total), highlight: true),
                   ],
@@ -193,7 +254,7 @@ class _RideEndScreenState extends State<RideEndScreen> {
                   onChanged: (v) => setState(() => _contestPause = v ?? false),
                   controlAffinity: ListTileControlAffinity.leading,
                   title: Text(
-                    'Contester la Pause Arret (+${xaf(widget.pauseSupplement)})',
+                    'Contester la Pause Arret (+${xaf(pause)})',
                     style: const TextStyle(
                         fontSize: 13, fontWeight: FontWeight.w700),
                   ),
@@ -206,15 +267,10 @@ class _RideEndScreenState extends State<RideEndScreen> {
             ],
             const SizedBox(height: 14),
             ElevatedButton(
-              onPressed: () {
-                final messenger = ScaffoldMessenger.of(context);
-                Navigator.of(context).popUntil((route) => route.isFirst);
-                messenger.showSnackBar(SnackBar(
-                    content: Text(_contestPause
-                        ? 'Merci ! Contestation transmise a l\'arbitrage.'
-                        : 'Merci pour votre note de $_rating/5 !')));
-              },
-              child: Text('Payer ${xaf(total)} et terminer'),
+              onPressed: () => _submit(total),
+              child: Text(live
+                  ? 'Envoyer ma note (${xaf(total)} regles)'
+                  : 'Payer ${xaf(total)} et terminer'),
             ),
             const SizedBox(height: 6),
             TextButton.icon(
@@ -251,9 +307,22 @@ class _RideEndScreenState extends State<RideEndScreen> {
               ListTile(
                 leading: Icon(r.$1, color: AppColors.danger),
                 title: Text(r.$2),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  final messenger = ScaffoldMessenger.of(context);
+                  if (widget.ride != null) {
+                    try {
+                      await context.read<AppState>().openDispute(
+                          widget.ride!['id'] as int,
+                          r.$2 == 'Montant incorrect' ? 'price' : 'other',
+                          description: r.$2);
+                    } catch (e) {
+                      messenger.showSnackBar(
+                          SnackBar(content: Text(apiErrorMessage(e))));
+                      return;
+                    }
+                  }
+                  messenger.showSnackBar(SnackBar(
                       content:
                           Text('Signalement "${r.$2}" envoye au support.')));
                 },

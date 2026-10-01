@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:carlinq_core/carlinq_core.dart';
 
+import '../../core/state/app_state.dart';
 import '../shared/main_shell.dart';
 
 class SignupFormScreen extends StatefulWidget {
@@ -17,6 +19,7 @@ class _SignupFormScreenState extends State<SignupFormScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _accept = false;
+  bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -58,13 +61,15 @@ class _SignupFormScreenState extends State<SignupFormScreen> {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: color),
-                      onPressed: () {
-                        if (_step < steps - 1) {
-                          setState(() => _step++);
-                        } else {
-                          _finish();
-                        }
-                      },
+                      onPressed: _loading
+                          ? null
+                          : () {
+                              if (_step < steps - 1) {
+                                setState(() => _step++);
+                              } else {
+                                _finish();
+                              }
+                            },
                       child: Text(_step < steps - 1 ? 'Continuer' : 'Terminer'),
                     ),
                   ),
@@ -191,12 +196,55 @@ class _SignupFormScreenState extends State<SignupFormScreen> {
     );
   }
 
-  void _finish() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const MainShell()),
-      (_) => false,
-    );
+  Future<void> _finish() async {
+    if (!_accept) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content:
+              Text("Acceptez les conditions d'utilisation pour continuer.")));
+      return;
+    }
+    setState(() => _loading = true);
+    try {
+      await context.read<AppState>().signup(
+            fullName: _nameCtrl.text.trim(),
+            phone: _phoneCtrl.text.trim(),
+            password: _passCtrl.text,
+            email: _emailCtrl.text.trim(),
+            role: UserRole.passenger,
+          );
+      if (!mounted) return;
+      _enter();
+    } catch (e) {
+      if (!mounted) return;
+      final offline = e is ApiException && e.isNetwork;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Inscription impossible'),
+          content: Text(apiErrorMessage(e)),
+          actions: [
+            if (offline)
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _enter();
+                },
+                child: const Text('Continuer en demo'),
+              ),
+            FilledButton(
+                onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+          ],
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
+
+  void _enter() => Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainShell()),
+        (_) => false,
+      );
 }
 
 class _SectionTitle extends StatelessWidget {

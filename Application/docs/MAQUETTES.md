@@ -79,6 +79,8 @@ Zones · Revenus · Profil.
 | - | Revenus & objectifs | Revenus jour / semaine / mois, objectif hebdo (paliers, pause 72 h), score de points | ![](maquettes/c08_revenus_objectifs.png) |
 | - | Fin de course chauffeur | Gains nets après commission 8 %, +2 points, **notation du passager**, enchaînement Retour maison | ![](maquettes/c09_fin_course_chauffeur.png) |
 | - | Pack Premium | Souscription / renouvellement 5 000 XAF/mois, moyen de paiement, factures | ![](maquettes/c10_pack_premium.png) |
+| - | **Partage d'objectif** (propriétaire) | Progression propre + aidants, invitation d'un chauffeur ayant atteint son objectif avec un pourcentage (5-30 %, 50 % max au total, 3 aidants), annulation avant contribution, répartition au versement | ![](maquettes/c11_partage_objectif.png) |
+| - | **Partage d'objectif** (aidant) | Demandes reçues : objectif du collègue, bonus, part projetée, accepter / refuser | ![](maquettes/c11b_partage_objectif_demandes.png) |
 
 ## Règles métier reflétées dans les maquettes
 

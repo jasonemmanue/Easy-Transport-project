@@ -43,7 +43,7 @@ class DriverProfileScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Emmanuel S.',
+                      Text(app.displayName,
                           style: TextStyle(
                               color: Colors.white,
                               fontSize: 20,
@@ -118,10 +118,10 @@ class DriverProfileScreen extends StatelessWidget {
                       style:
                           TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                   const SizedBox(height: 10),
-                  _row('Marque', 'Toyota'),
-                  _row('Modele', 'Camry 2018'),
-                  _row('Couleur', 'Gris metallise'),
-                  _row('Immatriculation', 'LT 8342'),
+                  _row('Marque', app.driver?['vehicle_brand'] as String? ?? 'Toyota'),
+                  _row('Modele', app.driver?['vehicle_model'] as String? ?? 'Camry 2018'),
+                  _row('Couleur', app.driver?['vehicle_color'] as String? ?? (app.live ? '-' : 'Gris metallise')),
+                  _row('Immatriculation', app.driver?['vehicle_plate'] as String? ?? 'LT 8342'),
                   _row('Classe', app.serviceClass.label),
                 ],
               ),

@@ -33,14 +33,14 @@ class PassengerProfileScreen extends StatelessWidget {
                     child: const Icon(Icons.person,
                         color: AppColors.primary, size: 36)),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Emmanuel Saka',
+                      Text(app.displayName,
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.w800)),
-                      Text('+237 6 90 12 34 56',
+                      Text(app.phone,
                           style: TextStyle(color: AppColors.textSecondary)),
                       SizedBox(height: 6),
                       Row(children: [

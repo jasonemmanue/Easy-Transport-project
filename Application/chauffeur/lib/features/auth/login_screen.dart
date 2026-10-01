@@ -4,6 +4,7 @@ import 'package:carlinq_core/carlinq_core.dart';
 
 import '../../core/state/app_state.dart';
 import '../shared/main_shell.dart';
+import 'session_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,11 +15,47 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   UserRole _role = UserRole.drivers;
+  final _phoneCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  bool _loading = false;
+  String? _error;
+
+  Future<void> _submit() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final app = context.read<AppState>();
+    try {
+      await app.login(_phoneCtrl.text.trim(), _passCtrl.text);
+      if (app.me?['role'] == 'passenger' || app.me?['role'] == 'admin') {
+        app.logout();
+        throw ApiException(403, 'WRONG_APP',
+            "Ce compte n'est pas un compte chauffeur : utilisez l'app Carlinq passager.");
+      }
+      if (!mounted) return;
+      goHome(context, app);
+    } catch (e) {
+      setState(() => _error = apiErrorMessage(e));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final app = context.read<AppState>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Connexion')),
+      appBar: AppBar(
+        title: const Text('Connexion'),
+        actions: [
+          IconButton(
+            tooltip: 'Serveur API',
+            icon: const Icon(Icons.dns_outlined),
+            onPressed: () => showServerSettings(context, app.api),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -34,7 +71,44 @@ class _LoginScreenState extends State<LoginScreen> {
                 'Connectez-vous a votre espace chauffeur',
                 style: TextStyle(color: AppColors.textSecondary),
               ),
+              const SizedBox(height: 24),
+              TextField(
+                controller: _phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                    labelText: 'Telephone (+237...)',
+                    prefixIcon: Icon(Icons.phone_iphone)),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _passCtrl,
+                obscureText: true,
+                onSubmitted: (_) => _submit(),
+                decoration: const InputDecoration(
+                    labelText: 'Mot de passe',
+                    prefixIcon: Icon(Icons.lock_outline)),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(_error!, style: const TextStyle(color: AppColors.danger)),
+              ],
               const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loading ? null : _submit,
+                child: _loading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : const Text('Se connecter'),
+              ),
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 8),
+              const Text('Mode demo (hors ligne)',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
               SegmentedButton<UserRole>(
                 segments: const [
                   ButtonSegment(
@@ -49,57 +123,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 selected: {_role},
                 onSelectionChanged: (s) => setState(() => _role = s.first),
               ),
-              const SizedBox(height: 24),
-              const TextField(
-                decoration: InputDecoration(
-                    labelText: 'Telephone ou Email',
-                    prefixIcon: Icon(Icons.person_outline)),
-              ),
-              const SizedBox(height: 12),
-              const TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                    labelText: 'Mot de passe',
-                    prefixIcon: Icon(Icons.lock_outline)),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                    onPressed: () {},
-                    child: const Text('Mot de passe oublie ?')),
-              ),
               const SizedBox(height: 8),
-              ElevatedButton(
+              OutlinedButton.icon(
                 onPressed: () {
-                  context.read<AppState>().setRole(_role);
+                  app.setRole(_role);
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => const MainShell()),
                     (_) => false,
                   );
                 },
-                child: const Text('Se connecter'),
+                icon: const Icon(Icons.play_circle_outline),
+                label: const Text('Explorer en mode demo'),
               ),
-              const SizedBox(height: 12),
-              Row(children: const [
-                Expanded(child: Divider()),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text('ou'),
-                ),
-                Expanded(child: Divider()),
-              ]),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.g_mobiledata, size: 28),
-                label: const Text('Continuer avec Google'),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.facebook),
-                label: const Text('Continuer avec Facebook'),
-              ),
+              const SizedBox(height: 16),
+              Text('Serveur : ${app.api.baseUrl}',
+                  style: const TextStyle(
+                      fontSize: 11, color: AppColors.textSecondary)),
             ],
           ),
         ),

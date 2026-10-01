@@ -2,28 +2,34 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    """Configuration d'infrastructure (.env).
+
+    Les regles metier modifiables a chaud (tarifs, objectifs, partage d'objectif)
+    ne sont PAS ici : elles vivent en base (table `app_settings`) et se modifient
+    via `/api/v1/admin/settings/*`. Les valeurs ci-dessous ne servent que de
+    valeurs initiales lors du premier demarrage.
+    """
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     APP_NAME: str = "Carlinq API"
     APP_ENV: str = "development"
-    APP_HOST: str = "0.0.0.0"
-    APP_PORT: int = 8000
 
     SECRET_KEY: str = "change-me"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    DATABASE_URL: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/carlinq"
-    REDIS_URL: str = "redis://localhost:6379/0"
+    DATABASE_URL: str = "postgresql+psycopg2://postgres:postgres@localhost:55432/carlinq"
 
-    GOOGLE_MAPS_API_KEY: str = ""
-    FIREBASE_CREDENTIALS_PATH: str = ""
+    # Cache Redis (vide = cache desactive). Jamais source de verite.
+    REDIS_URL: str = "redis://localhost:56379/0"
+    CACHE_TTL_SECONDS: int = 300
 
-    COMMISSION_RATE: float = 0.08
-    MIN_WALLET_XAF: int = 500
-    CANCELLATION_FREE_WINDOW_SECONDS: int = 15
-    TRAFFIC_TOLERANCE_MINUTES: int = 2
-    COPILOTE_MONTHLY_QUOTA_XAF: int = 5000
+    # Fuseau metier : les semaines d'objectifs et les quotas journaliers
+    # se calculent a l'heure de Douala.
+    TIMEZONE: str = "Africa/Douala"
+
+    CORS_ORIGINS: str = "*"
 
 
 settings = Settings()

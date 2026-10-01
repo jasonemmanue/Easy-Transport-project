@@ -8,7 +8,7 @@ Trois sous-projets couvrant les 3 couches d'Carlinq :
 
 - `Application/` : Flutter (Android + iOS). **Deux apps distinctes** : `passager/` (Carlinq) et `chauffeur/` (Carlinq Chauffeur, volets Drivers et Copilote), plus le package partagé `carlinq_core/`.
 - `Backoffice/` : Next.js 14, panneau admin bilan/config/arbitrage.
-- `API/` : FastAPI, moteur de tarification, WebSockets, PostgreSQL + PostGIS + Redis.
+- `API/` : FastAPI + PostgreSQL + Redis (Docker Compose, API sur le port 8010), moteur de tarification, objectifs et partage d'objectif entre chauffeurs.
 
 Chaque sous-projet a son propre `CLAUDE.md` avec le contexte détaillé - lis-le avant d'y travailler.
 

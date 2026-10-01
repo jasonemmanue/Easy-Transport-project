@@ -2,10 +2,13 @@
 /// (Carlinq Chauffeur : Drivers + Copilote).
 library;
 
+export 'src/api/api_client.dart';
+export 'src/api/places.dart';
 export 'src/models/user_role.dart';
 export 'src/shared/account_actions.dart';
 export 'src/shared/chat_screen.dart';
 export 'src/shared/notifications_screen.dart';
+export 'src/shared/server_settings.dart';
 export 'src/state/base_app_state.dart';
 export 'src/theme/app_colors.dart';
 export 'src/theme/app_theme.dart';

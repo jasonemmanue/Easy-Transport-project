@@ -52,3 +52,17 @@ extension ServiceClassX on ServiceClass {
         ServiceClass.prestige => 'Prado, Fortuner, RAV4',
       };
 }
+
+/// Valeurs echangees avec l'API (identiques aux noms des enums).
+extension UserRoleApi on UserRole {
+  String get apiValue => name;
+  static UserRole fromApi(String v) => UserRole.values.byName(v);
+}
+
+extension CarlinqModeApi on CarlinqMode {
+  String get apiValue => name;
+}
+
+extension ServiceClassApi on ServiceClass {
+  String get apiValue => name;
+}

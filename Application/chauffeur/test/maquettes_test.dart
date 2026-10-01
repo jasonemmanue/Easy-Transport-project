@@ -27,6 +27,7 @@ import 'package:carlinq_chauffeur/features/driver/driver_return_home_screen.dart
 import 'package:carlinq_chauffeur/features/driver/driver_ride_end_screen.dart';
 import 'package:carlinq_chauffeur/features/driver/driver_route_editor_screen.dart';
 import 'package:carlinq_chauffeur/features/driver/driver_routes_screen.dart';
+import 'package:carlinq_chauffeur/features/driver/goal_share_screen.dart';
 
 const _enabled = bool.fromEnvironment('MAQUETTES');
 
@@ -54,6 +55,8 @@ void main() {
     'c08_revenus_objectifs': (DriverEarningsScreen(), _d),
     'c09_fin_course_chauffeur': (DriverRideEndScreen(pauseSupplement: 100), _d),
     'c10_pack_premium': (DriverPremiumScreen(), _c),
+    'c11_partage_objectif': (GoalShareScreen(), _d),
+    'c11b_partage_objectif_demandes': (GoalShareScreen(initialTab: 1), _d),
   };
 
   for (final shot in shots.entries) {

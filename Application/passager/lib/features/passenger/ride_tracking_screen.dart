@@ -3,14 +3,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:carlinq_core/carlinq_core.dart';
 
+import 'live_ride_tracking_screen.dart';
 import 'ride_end_screen.dart';
 
-class RideTrackingScreen extends StatefulWidget {
+/// Suivi de course (5.1.4). Course reelle (API) si [initialRide] est fourni,
+/// sinon simulation de demonstration.
+class RideTrackingScreen extends StatelessWidget {
   const RideTrackingScreen({
     super.key,
     this.stops = const ['Marche Central', 'Pharmacie du Rond-Point'],
     this.destination = 'Aeroport Douala Intl',
     this.taxiZone,
+    this.initialRide,
   });
 
   final List<String> stops;
@@ -19,11 +23,29 @@ class RideTrackingScreen extends StatefulWidget {
   /// Renseigne en mode Carlinq Taxi (point de prise en charge bordure).
   final String? taxiZone;
 
+  /// Course creee via l'API (`POST /rides`) : suivi en direct.
+  final Map<String, dynamic>? initialRide;
+
   @override
-  State<RideTrackingScreen> createState() => _RideTrackingScreenState();
+  Widget build(BuildContext context) => initialRide != null
+      ? LiveRideTrackingScreen(ride: initialRide!)
+      : _DemoRideTracking(
+          stops: stops, destination: destination, taxiZone: taxiZone);
 }
 
-class _RideTrackingScreenState extends State<RideTrackingScreen> {
+class _DemoRideTracking extends StatefulWidget {
+  const _DemoRideTracking(
+      {required this.stops, required this.destination, this.taxiZone});
+
+  final List<String> stops;
+  final String destination;
+  final String? taxiZone;
+
+  @override
+  State<_DemoRideTracking> createState() => _RideTrackingScreenState();
+}
+
+class _RideTrackingScreenState extends State<_DemoRideTracking> {
   // Parametres demo (configurables cote administration).
   static const _freeCancelSeconds = 15;
   static const _lateCancelFee = 500;

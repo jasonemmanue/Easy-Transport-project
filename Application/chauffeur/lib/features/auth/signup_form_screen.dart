@@ -6,15 +6,22 @@ import '../../core/state/app_state.dart';
 import 'pending_validation_screen.dart';
 
 class SignupFormScreen extends StatefulWidget {
-  const SignupFormScreen({super.key, required this.role});
+  const SignupFormScreen(
+      {super.key, required this.role, this.accountCreated = false});
   final UserRole role;
+
+  /// Compte deja cree (connexion sans profil vehicule) : on commence a l'etape vehicule.
+  final bool accountCreated;
 
   @override
   State<SignupFormScreen> createState() => _SignupFormScreenState();
 }
 
 class _SignupFormScreenState extends State<SignupFormScreen> {
-  int _step = 0;
+  late int _step = widget.accountCreated ? 1 : 0;
+  final _vehicleCtrl = TextEditingController();
+  final _plateCtrl = TextEditingController();
+  bool _loading = false;
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
@@ -68,13 +75,15 @@ class _SignupFormScreenState extends State<SignupFormScreen> {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: color),
-                      onPressed: () {
-                        if (_step < steps - 1) {
-                          setState(() => _step++);
-                        } else {
-                          _finish();
-                        }
-                      },
+                      onPressed: _loading
+                          ? null
+                          : () {
+                              if (_step < steps - 1) {
+                                setState(() => _step++);
+                              } else {
+                                _finish();
+                              }
+                            },
                       child: Text(_step < steps - 1 ? 'Continuer' : 'Terminer'),
                     ),
                   ),
@@ -236,6 +245,7 @@ class _SignupFormScreenState extends State<SignupFormScreen> {
         ],
         const SizedBox(height: 16),
         TextField(
+          controller: _vehicleCtrl,
           decoration: const InputDecoration(
             labelText: 'Marque / modele du vehicule',
             prefixIcon: Icon(Icons.directions_car),
@@ -243,6 +253,8 @@ class _SignupFormScreenState extends State<SignupFormScreen> {
         ),
         const SizedBox(height: 12),
         TextField(
+          controller: _plateCtrl,
+          textCapitalization: TextCapitalization.characters,
           decoration: const InputDecoration(
             labelText: 'Immatriculation',
             prefixIcon: Icon(Icons.confirmation_number_outlined),
@@ -316,14 +328,72 @@ class _SignupFormScreenState extends State<SignupFormScreen> {
     );
   }
 
-  void _finish() {
-    context.read<AppState>().setRole(widget.role);
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-          builder: (_) => PendingValidationScreen(role: widget.role)),
-      (_) => false,
-    );
+  Future<void> _finish() async {
+    final app = context.read<AppState>();
+    if (!_accept) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content:
+              Text("Acceptez les conditions d'utilisation pour continuer.")));
+      return;
+    }
+    app.setRole(widget.role);
+    setState(() => _loading = true);
+    try {
+      if (!widget.accountCreated) {
+        await app.signup(
+          fullName: _nameCtrl.text.trim(),
+          phone: _phoneCtrl.text.trim(),
+          password: _passCtrl.text,
+          email: _emailCtrl.text.trim(),
+          role: widget.role,
+        );
+      }
+      final vehicle = _vehicleCtrl.text.trim().split(RegExp(r'\s+'));
+      final flexible = _mode == 'Carlinq Flexible';
+      await app.registerDriverProfile(
+        mode: flexible ? CarlinqMode.flexible : CarlinqMode.taxi,
+        serviceClass: flexible
+            ? ServiceClass.values.byName(_plaqueClass.toLowerCase())
+            : null,
+        brand: vehicle.first.isEmpty ? 'Vehicule' : vehicle.first,
+        model: vehicle.length > 1 ? vehicle.skip(1).join(' ') : '-',
+        plate: _plateCtrl.text.trim().toUpperCase(),
+        companyType: widget.role == UserRole.copilote ? _companyType : null,
+      );
+      if (!mounted) return;
+      _toPending();
+    } catch (e) {
+      if (!mounted) return;
+      final offline = e is ApiException && e.isNetwork;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Inscription impossible'),
+          content: Text(apiErrorMessage(e)),
+          actions: [
+            if (offline && !app.live)
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _toPending();
+                },
+                child: const Text('Continuer en demo'),
+              ),
+            FilledButton(
+                onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+          ],
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
+
+  void _toPending() => Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+            builder: (_) => PendingValidationScreen(role: widget.role)),
+        (_) => false,
+      );
 }
 
 class _SectionTitle extends StatelessWidget {

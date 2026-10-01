@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:carlinq_core/carlinq_core.dart';
+
+import '../../core/state/app_state.dart';
+import 'goal_share_screen.dart';
 
 class DriverEarningsScreen extends StatelessWidget {
   const DriverEarningsScreen({super.key});
   @override
   Widget build(BuildContext context) {
+    final app = context.watch<AppState>();
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -40,24 +45,28 @@ class DriverEarningsScreen extends StatelessWidget {
                             fontWeight: FontWeight.w800, fontSize: 15)),
                   ]),
                   const SizedBox(height: 10),
-                  const Text('32 / 50 courses',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                  Text('${app.weeklyProgress} / ${app.weeklyGoal} courses',
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.w800)),
+                  if (app.sharedRides > 0)
+                    Text('dont ${app.sharedRides} apportees par vos aidants',
+                        style: const TextStyle(
+                            fontSize: 12, color: AppColors.classPrestige)),
                   const SizedBox(height: 6),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: const LinearProgressIndicator(
-                      value: 0.64,
+                    child: LinearProgressIndicator(
+                      value: (app.weeklyProgress / app.weeklyGoal).clamp(0, 1),
                       minHeight: 8,
                       color: AppColors.classEco,
                       backgroundColor: Colors.black12,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Atteignez 50 courses avant dimanche pour un bonus de +10 000 XAF.',
-                    style:
-                        TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  Text(
+                    'Atteignez ${app.weeklyGoal} courses avant dimanche pour un bonus de +${xaf(app.goalBonusXaf)}.',
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 12),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -81,6 +90,18 @@ class DriverEarningsScreen extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.classPrestige),
+                    onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (_) => const GoalShareScreen())),
+                    icon: const Icon(Icons.handshake_outlined),
+                    label: Text(app.goalAchieved
+                        ? 'Aider un chauffeur'
+                        : 'Partager mon objectif'),
                   ),
                 ],
               ),

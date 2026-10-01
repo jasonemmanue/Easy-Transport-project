@@ -58,3 +58,14 @@ src/
 - `brand.taxi` `#BF360C`
 - `brand.eco` `#388E3C` / `brand.serenity` `#1565C0` / `brand.prestige` `#F57F17`
 - `brand.stop` `#0277BD` / `brand.traffic` `#E65100`
+
+## Données réelles (API FastAPI)
+
+La page **Objectifs & partages** (`/goals`) lit l'API Carlinq côté serveur (`src/lib/api.ts`) :
+objectifs de la semaine, partages, répartition prévue, versements, et bouton de clôture de semaine
+(Route Handler `/api/goals`, aucune mutation directe du navigateur vers l'API).
+
+```bash
+cd ../API && docker compose up -d
+cd ../Backoffice && npm install && npm run dev   # variables : voir .env.example (CARLINQ_API_URL...)
+```

@@ -1,14 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:carlinq_core/carlinq_core.dart';
 
+import '../../core/state/app_state.dart';
 import 'driver_return_home_screen.dart';
 import 'driver_ride_end_screen.dart';
 
 /// Ecran 3 chauffeur - Navigation active (5.2.3).
 class DriverNavigationScreen extends StatefulWidget {
-  const DriverNavigationScreen({super.key});
+  const DriverNavigationScreen({super.key, this.ride});
+
+  /// Course acceptee via l'API (actions envoyees au serveur), null en demo.
+  final Map<String, dynamic>? ride;
   @override
   State<DriverNavigationScreen> createState() => _DriverNavigationScreenState();
 }
@@ -18,7 +23,39 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
   static const _trafficRatePerMin = 50;
   static const _trafficToleranceSeconds = 180;
 
-  static const _stops = ['Pharmacie Bali', 'Ecole Publique Deido'];
+  static const _demoStops = ['Pharmacie Bali', 'Ecole Publique Deido'];
+
+  bool get _live => widget.ride != null;
+  bool _busy = false;
+
+  List<Map<String, dynamic>> get _rideStops =>
+      ((context.read<AppState>().activeRide ?? widget.ride)?['stops']
+                  as List? ??
+              const [])
+          .cast<Map<String, dynamic>>();
+
+  List<String> get _stops => _live
+      ? [for (final st in _rideStops) st['label'] as String? ?? 'Arret']
+      : _demoStops;
+
+  /// Envoie l'action a l'API (mode connecte) puis applique [apply] localement.
+  Future<void> _act(String action, VoidCallback apply,
+      [Map<String, dynamic>? body]) async {
+    if (!_live) {
+      setState(apply);
+      return;
+    }
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await context.read<AppState>().rideAction(action, body);
+      if (mounted) setState(apply);
+    } catch (e) {
+      if (mounted) _snack(apiErrorMessage(e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   Timer? _timer;
   bool _started = false;
@@ -195,7 +232,9 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
                       label: _stops[i],
                       done: i < _stopsDone,
                       next: i == _stopsDone && _started,
-                      onValidate: () => setState(() => _stopsDone = i + 1),
+                      onValidate: () => _act(
+                          _live ? 'stops/${_rideStops[i]['id']}/pass' : '',
+                          () => _stopsDone = i + 1),
                     ),
                   const SizedBox(height: 8),
                   Row(
@@ -208,7 +247,7 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
                                 color: AppColors.trafficBanner),
                           ),
                           onPressed: _trafficActive
-                              ? () => setState(() {
+                              ? () => _act('traffic/end', () {
                                     _trafficActive = false;
                                     _alternative = null;
                                   })
@@ -227,8 +266,13 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
                                 color: AppColors.classPrestige),
                           ),
                           onPressed: _started
-                              ? () =>
-                                  setState(() => _pauseActive = !_pauseActive)
+                              ? () => _pauseActive
+                                  ? _act(
+                                      'pause/end', () => _pauseActive = false)
+                                  : _act('pause', () {
+                                      _pauseActive = true;
+                                      _pauseSeconds = 0;
+                                    }, {'lat': 4.05, 'lng': 9.70})
                               : null,
                           icon: Icon(
                               _pauseActive ? Icons.play_arrow : Icons.pause),
@@ -260,9 +304,11 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
                               backgroundColor: _started
                                   ? AppColors.danger
                                   : AppColors.classEco),
-                          onPressed: _started
-                              ? _finish
-                              : () => setState(() => _started = true),
+                          onPressed: _busy
+                              ? null
+                              : _started
+                                  ? _finish
+                                  : () => _act('start', () => _started = true),
                           icon: Icon(_started ? Icons.flag : Icons.play_arrow),
                           label: Text(_started ? 'Terminer' : 'Demarrer'),
                         ),
@@ -281,13 +327,50 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
   void _snack(String text) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
-  void _finish() {
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-      builder: (_) => DriverRideEndScreen(
-        pauseSupplement: _pauseSupplement,
-        trafficSupplement: _trafficSupplement,
-      ),
-    ));
+  Future<void> _finish() async {
+    if (!_live) {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (_) => DriverRideEndScreen(
+          pauseSupplement: _pauseSupplement,
+          trafficSupplement: _trafficSupplement,
+        ),
+      ));
+      return;
+    }
+    final app = context.read<AppState>();
+    var cash = false;
+    if ((app.activeRide ?? widget.ride)!['payment_method'] == 'cash') {
+      cash = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Paiement direct'),
+              content: const Text(
+                  'Confirmez avoir recu le paiement du passager. La commission sera '
+                  'prelevee sur votre portefeuille.'),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('Pas encore')),
+                FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('Paiement recu')),
+              ],
+            ),
+          ) ??
+          false;
+      if (!cash) return;
+    }
+    setState(() => _busy = true);
+    try {
+      final ride = await app.completeActiveRide(cashReceived: cash);
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => DriverRideEndScreen(ride: ride)));
+    } catch (e) {
+      if (mounted) _snack(apiErrorMessage(e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   /// Anti-embouteillage : 3 meilleurs itineraires alternatifs (Google Routes).
@@ -329,8 +412,9 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
                         fontWeight: FontWeight.w800)),
                 onTap: () {
                   Navigator.pop(ctx);
-                  setState(() {
+                  _act('traffic', () {
                     _trafficActive = true;
+                    _trafficSeconds = 0;
                     _alternative = r.$1.replaceFirst('Via ', '');
                   });
                 },
@@ -340,7 +424,10 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
               title: const Text('Rester sur l\'itineraire (compteur seul)'),
               onTap: () {
                 Navigator.pop(ctx);
-                setState(() => _trafficActive = true);
+                _act('traffic', () {
+                  _trafficActive = true;
+                  _trafficSeconds = 0;
+                });
               },
             ),
           ],

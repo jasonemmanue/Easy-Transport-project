@@ -39,6 +39,9 @@ Ne jamais les refusionner.
 
 - `carlinq_core/lib/carlinq_core.dart` (barrel) : `AppColors` / `AppTheme` (Table 18, Roboto), enums `UserRole`, `CarlinqMode`, `ServiceClass`, `BaseAppState` (thème, langue, mode, classe), `FakeMap` (placeholder à remplacer par `GoogleMap`), `StopsEditor` (arrêts réordonnables), `PriceLine`, `xaf()`, `ChatScreen`, `NotificationsScreen`, `editHomeAddress` / `confirmDeleteAccount`.
 - `carlinq_core/lib/testing.dart` : `loadRealFonts()` pour les tests (non exporté par le barrel).
+- `carlinq_core` : `ApiClient` (dart:io, jetons, refresh), `BaseAppState.login/signup/logout`, `placeFor()` (adresse → coordonnées), `showServerSettings()`.
+- Chaque `AppState` a deux modes : **connecté** (`live`, données API) et **démo** (données embarquées). Toute nouvelle fonctionnalité doit gérer les deux.
+- Chauffeur : `core/goals/goal_share.dart` (modèle du partage d'objectif, même calcul que l'API), `features/driver/goal_share_screen.dart`, `features/auth/session_router.dart` (profil manquant / validation / tableau de bord).
 - Dans chaque app, `lib/core/state/app_state.dart` définit **son** `AppState extends BaseAppState` :
   - passager : portefeuille, domicile ;
   - chauffeur : rôle (Drivers / Copilote), points, objectifs, fenêtre de refus, Pack Premium, domicile.
@@ -63,3 +66,5 @@ Ne jamais les refusionner.
 - `AppTheme.light(googleFonts: false)` en test : Google Fonts tente sinon un téléchargement réseau.
 - Tout écran avec `Timer.periodic` (suivi de course, navigation, commande) doit l'annuler dans `dispose()`.
 - `flutter_localizations` est requis pour la locale `fr` (sinon exception MaterialLocalizations).
+- `flutter test` remplace le client HTTP : les tests d'API (`test/api_e2e_test.dart`) exécutent leur corps dans `HttpOverrides.runWithHttpOverrides(..., _RealHttp())`.
+- Release Android : la permission INTERNET et `usesCleartextTraffic` sont dans `src/main/AndroidManifest.xml` (les variantes debug/profile ne suffisent pas).

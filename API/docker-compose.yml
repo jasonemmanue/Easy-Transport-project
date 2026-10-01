@@ -1,25 +1,58 @@
-version: "3.9"
-services:
-  api:
-    build: .
-    ports: ["8000:8000"]
-    env_file: .env
-    depends_on: [db, redis]
-    volumes: [".:/app"]
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# Carlinq API - environnement local.
+#   docker compose up --build -d      API : http://localhost:8010/docs
+# Ports hotes decales (8010, 55432, 56379) pour cohabiter avec d'autres projets locaux.
+name: carlinq
 
+services:
   db:
-    image: postgis/postgis:16-3.4
+    image: postgres:16-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: carlinq
+      POSTGRES_PASSWORD: carlinq
       POSTGRES_DB: carlinq
-    ports: ["5432:5432"]
-    volumes: ["pgdata:/var/lib/postgresql/data"]
+    ports: ["55432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U carlinq -d carlinq"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
 
   redis:
     image: redis:7-alpine
-    ports: ["6379:6379"]
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+    ports: ["56379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: .
+    image: carlinq-api:latest
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg2://carlinq:carlinq@db:5432/carlinq
+      TEST_DATABASE_URL: postgresql+psycopg2://carlinq:carlinq@db:5432/carlinq_test
+      REDIS_URL: redis://redis:6379/0
+      TEST_REDIS_URL: redis://redis:6379/1
+      SEED_DEMO_DATA: "true"
+    ports: ["8010:8000"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
 volumes:
   pgdata:

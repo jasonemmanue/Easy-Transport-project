@@ -9,7 +9,10 @@ import 'driver_navigation_screen.dart';
 
 /// Ecran 2 chauffeur - Reception et acceptation (minuteur 20 s, quota refus).
 class DriverOrderScreen extends StatefulWidget {
-  const DriverOrderScreen({super.key});
+  const DriverOrderScreen({super.key, this.offer});
+
+  /// Offre reelle (`GET /rides/offers`), null en demo.
+  final Map<String, dynamic>? offer;
   @override
   State<DriverOrderScreen> createState() => _DriverOrderScreenState();
 }
@@ -43,18 +46,46 @@ class _DriverOrderScreenState extends State<DriverOrderScreen> {
     super.dispose();
   }
 
-  void _refuse() {
+  Future<void> _refuse() async {
     _timer?.cancel();
     final app = context.read<AppState>();
-    final penalty = app.refusalSecondsLeft < 60;
-    app.refuseOrder();
     final messenger = ScaffoldMessenger.of(context);
-    Navigator.of(context).pop();
-    messenger.showSnackBar(SnackBar(
-        content: Text(penalty
-            ? 'Quota de refus epuise : -5 points.'
-            : 'Commande refusee sans penalite.')));
+    final navigator = Navigator.of(context);
+    try {
+      final penalty = await app.refuseOffer((widget.offer?['id'] as int?) ?? 0);
+      navigator.pop();
+      messenger.showSnackBar(SnackBar(
+          content: Text(penalty
+              ? 'Quota de refus epuise : -5 points.'
+              : 'Commande refusee sans penalite.')));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(apiErrorMessage(e))));
+    }
   }
+
+  Future<void> _accept() async {
+    _timer?.cancel();
+    final offer = widget.offer;
+    final navigator = Navigator.of(context);
+    if (offer == null) {
+      navigator.pushReplacement(
+          MaterialPageRoute(builder: (_) => const DriverNavigationScreen()));
+      return;
+    }
+    try {
+      final ride =
+          await context.read<AppState>().acceptOffer(offer['id'] as int);
+      navigator.pushReplacement(MaterialPageRoute(
+          builder: (_) => DriverNavigationScreen(ride: ride)));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(apiErrorMessage(e))));
+      }
+    }
+  }
+
+  int _x(String key) => ((widget.offer![key] as num?) ?? 0).toInt();
 
   @override
   Widget build(BuildContext context) {
@@ -123,24 +154,29 @@ class _DriverOrderScreenState extends State<DriverOrderScreen> {
                       padding: const EdgeInsets.all(14),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text('Passager',
+                        children: [
+                          const Text('Passager',
                               style: TextStyle(fontWeight: FontWeight.w800)),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Row(children: [
-                            CircleAvatar(child: Icon(Icons.person)),
-                            SizedBox(width: 12),
+                            const CircleAvatar(child: Icon(Icons.person)),
+                            const SizedBox(width: 12),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Aline Poko',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.w700)),
+                                Text(
+                                    widget.offer?['passenger_name']
+                                            as String? ??
+                                        'Aline Poko',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w700)),
                                 Row(children: [
-                                  Icon(Icons.star,
+                                  const Icon(Icons.star,
                                       color: Colors.amber, size: 14),
-                                  SizedBox(width: 3),
-                                  Text('4.7 - 21 courses'),
+                                  const SizedBox(width: 3),
+                                  Text(widget.offer == null
+                                      ? '4.7 - 21 courses'
+                                      : '${widget.offer!['passenger_rating']}'),
                                 ]),
                               ],
                             ),
@@ -159,35 +195,77 @@ class _DriverOrderScreenState extends State<DriverOrderScreen> {
                           const Text('Trajet',
                               style: TextStyle(fontWeight: FontWeight.w800)),
                           const SizedBox(height: 10),
-                          const _Step(
-                              icon: Icons.location_on,
-                              color: AppColors.classEco,
-                              label: 'Prise en charge',
-                              value: 'Bonanjo, 2.1 km'),
-                          const _Step(
-                              icon: Icons.pin_drop,
-                              color: AppColors.stopMarker,
-                              label: 'Arret 1',
-                              value: 'Pharmacie Bali (+300 XAF)'),
-                          const _Step(
-                              icon: Icons.pin_drop,
-                              color: AppColors.stopMarker,
-                              label: 'Arret 2',
-                              value: 'Ecole Publique (+300 XAF)'),
-                          const _Step(
-                              icon: Icons.flag,
-                              color: AppColors.taxiOrange,
-                              label: 'Destination',
-                              value: 'Marche Central'),
+                          if (widget.offer == null) ...const [
+                            _Step(
+                                icon: Icons.location_on,
+                                color: AppColors.classEco,
+                                label: 'Prise en charge',
+                                value: 'Bonanjo, 2.1 km'),
+                            _Step(
+                                icon: Icons.pin_drop,
+                                color: AppColors.stopMarker,
+                                label: 'Arret 1',
+                                value: 'Pharmacie Bali (+300 XAF)'),
+                            _Step(
+                                icon: Icons.pin_drop,
+                                color: AppColors.stopMarker,
+                                label: 'Arret 2',
+                                value: 'Ecole Publique (+300 XAF)'),
+                            _Step(
+                                icon: Icons.flag,
+                                color: AppColors.taxiOrange,
+                                label: 'Destination',
+                                value: 'Marche Central'),
+                          ] else ...[
+                            _Step(
+                                icon: Icons.location_on,
+                                color: AppColors.classEco,
+                                label: 'Prise en charge',
+                                value:
+                                    widget.offer!['pickup_label'] as String? ??
+                                        '-'),
+                            for (final st in (widget.offer!['stops'] as List))
+                              _Step(
+                                  icon: Icons.pin_drop,
+                                  color: AppColors.stopMarker,
+                                  label:
+                                      'Arret ${(st['order_index'] as int) + 1}',
+                                  value:
+                                      '${st['label'] ?? '-'} (+${xaf((st['supplement_xaf'] as num).toInt())})'),
+                            _Step(
+                                icon: Icons.flag,
+                                color: AppColors.taxiOrange,
+                                label: 'Destination',
+                                value: widget.offer!['destination_label']
+                                        as String? ??
+                                    '-'),
+                          ],
                           const Divider(),
-                          _pair('Distance totale', '6.4 km'),
-                          _pair('Duree estimee', '18 min'),
-                          _pair('Tarif base', '2 500 XAF'),
-                          _pair('Supplement arrets', '+ 600 XAF'),
-                          _pair('Supplement route degradee', '+ 100 XAF'),
-                          const Divider(),
-                          _pair('Vous gagnez (apres 8%)', '2 944 XAF',
-                              highlight: true),
+                          if (widget.offer == null) ...[
+                            _pair('Distance totale', '6.4 km'),
+                            _pair('Duree estimee', '18 min'),
+                            _pair('Tarif base', '2 500 XAF'),
+                            _pair('Supplement arrets', '+ 600 XAF'),
+                            _pair('Supplement route degradee', '+ 100 XAF'),
+                            const Divider(),
+                            _pair('Vous gagnez (apres 8%)', '2 944 XAF',
+                                highlight: true),
+                          ] else ...[
+                            _pair('Distance totale',
+                                '${(widget.offer!['distance_km'] as num).toStringAsFixed(1)} km'),
+                            _pair(
+                                'Tarif base',
+                                xaf(_x('base_xaf') +
+                                    _x('places_supplement_xaf'))),
+                            _pair('Supplement arrets',
+                                '+ ${xaf(_x('stop_supplement_xaf'))}'),
+                            _pair('Supplement route degradee',
+                                '+ ${xaf(_x('degraded_supplement_xaf'))}'),
+                            const Divider(),
+                            _pair('Vous gagnez (apres commission)',
+                                xaf(_x('total_xaf') - _x('commission_xaf')),
+                                highlight: true),
+                          ],
                         ],
                       ),
                     ),
@@ -210,14 +288,7 @@ class _DriverOrderScreenState extends State<DriverOrderScreen> {
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.classEco),
-                          onPressed: () {
-                            _timer?.cancel();
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                  builder: (_) =>
-                                      const DriverNavigationScreen()),
-                            );
-                          },
+                          onPressed: _accept,
                           icon: const Icon(Icons.check),
                           label: const Text('Accepter'),
                         ),

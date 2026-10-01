@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:carlinq_core/carlinq_core.dart';
 
+import '../../core/state/app_state.dart';
+import 'reservation_flexible_screen.dart' show paymentMethodFor;
 import 'ride_tracking_screen.dart';
 
 class ReservationTaxiScreen extends StatefulWidget {
@@ -23,12 +26,94 @@ class _ReservationTaxiScreenState extends State<ReservationTaxiScreen> {
   List<String> _stops = [];
   late final _destCtrl = TextEditingController(text: widget.destination);
 
-  static const _zones = [
+  static const _demoZones = [
     _TaxiZone('Zone Akwa - Rue Joss', 250, 8),
     _TaxiZone('Zone Bonapriso - Boulevard', 600, 5),
     _TaxiZone('Zone Deido - Marche', 1100, 12),
     _TaxiZone('Zone Bali - Hopital Laquintinie', 1800, 3),
   ];
+
+  List<_TaxiZone> _zones = _demoZones;
+  Map<String, dynamic>? _quote;
+  String? _quoteKey;
+  bool _submitting = false;
+
+  void _syncZones(AppState app) {
+    _zones = app.live && app.zones.isNotEmpty
+        ? [
+            for (final z in app.zones)
+              _TaxiZone(
+                  'Zone ${z['district']} - ${z['name']}',
+                  (z['distance_m'] as num?)?.toInt() ?? 0,
+                  (z['available_places'] as num?)?.toInt() ?? 0,
+                  id: z['id'] as int,
+                  lat: (z['lat'] as num).toDouble(),
+                  lng: (z['lng'] as num).toDouble()),
+          ]
+        : _demoZones;
+    if (_zoneIndex >= _zones.length) _zoneIndex = 0;
+  }
+
+  Place _pickupOf(_TaxiZone z) =>
+      z.lat != null ? Place(z.name, z.lat!, z.lng!) : placeFor(z.name);
+
+  String get _destination =>
+      _destCtrl.text.isEmpty ? 'Carrefour Ndokoti' : _destCtrl.text;
+
+  void _maybeRefreshQuote(AppState app, _TaxiZone zone) {
+    if (!app.live) return;
+    final key = [zone.name, _destination, _stops.join('|'), _places].join('#');
+    if (key == _quoteKey) return;
+    _quoteKey = key;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        final q = await app.estimate(
+            mode: CarlinqMode.taxi,
+            pickup: zone.name,
+            pickupPlace: _pickupOf(zone),
+            destination: _destination,
+            stops: _stops,
+            places: _places);
+        if (mounted && key == _quoteKey) setState(() => _quote = q);
+      } catch (_) {}
+    });
+  }
+
+  Future<void> _confirm(AppState app, _TaxiZone zone) async {
+    if (!app.live) {
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => RideTrackingScreen(
+              stops: _stops, destination: _destination, taxiZone: zone.name)));
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      final ride = await app.createRide(
+        mode: CarlinqMode.taxi,
+        pickup: zone.name,
+        pickupPlace: _pickupOf(zone),
+        destination: _destination,
+        stops: _stops,
+        places: _places,
+        paymentMethod: paymentMethodFor(_payment),
+        taxiZoneId: zone.id,
+      );
+      if (!mounted) return;
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => RideTrackingScreen(
+              stops: _stops,
+              destination: _destination,
+              taxiZone: zone.name,
+              initialRide: ride)));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(apiErrorMessage(e))));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
 
   List<_TaxiZone> get _sortedZones {
     final list = [..._zones];
@@ -42,11 +127,21 @@ class _ReservationTaxiScreenState extends State<ReservationTaxiScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final app = context.watch<AppState>();
+    _syncZones(app);
     final zones = _sortedZones;
     final selected = _zones[_zoneIndex];
-    final stopSupplement = _stops.length * _stopFee;
-    final placesSupplement = (_places - 1) * (_baseFare ~/ 2);
-    final total = _baseFare + stopSupplement + placesSupplement;
+    _maybeRefreshQuote(app, selected);
+    final q = _quote;
+    final baseFare = q != null ? q['base_xaf'] as int : _baseFare;
+    final stopFee =
+        q != null ? q['stop_supplement_per_stop_xaf'] as int : _stopFee;
+    final placesSupplement = q != null
+        ? q['places_supplement_xaf'] as int
+        : (_places - 1) * (_baseFare ~/ 2);
+    final total = q != null
+        ? q['total_xaf'] as int
+        : _baseFare + _stops.length * _stopFee + placesSupplement;
 
     return Scaffold(
       appBar: AppBar(
@@ -129,7 +224,7 @@ class _ReservationTaxiScreenState extends State<ReservationTaxiScreen> {
                   const SizedBox(height: 16),
                   StopsEditor(
                     stops: _stops,
-                    supplementPerStop: _stopFee,
+                    supplementPerStop: stopFee,
                     onChanged: (s) => setState(() => _stops = s),
                   ),
                   const SizedBox(height: 16),
@@ -174,10 +269,10 @@ class _ReservationTaxiScreenState extends State<ReservationTaxiScreen> {
                     ),
                     child: Column(
                       children: [
-                        PriceLine('Tarif de base Carlinq Taxi', xaf(_baseFare)),
+                        PriceLine('Tarif de base Carlinq Taxi', xaf(baseFare)),
                         for (var i = 0; i < _stops.length; i++)
                           PriceLine('Arret ${i + 1} : ${_stops[i]}',
-                              '+${xaf(_stopFee)}'),
+                              '+${xaf(stopFee)}'),
                         if (_places > 1)
                           PriceLine('Places supplementaires (${_places - 1})',
                               '+${xaf(placesSupplement)}'),
@@ -190,16 +285,8 @@ class _ReservationTaxiScreenState extends State<ReservationTaxiScreen> {
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.taxiOrange),
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (_) => RideTrackingScreen(
-                                stops: _stops,
-                                destination: _destCtrl.text.isEmpty
-                                    ? 'Carrefour Ndokoti'
-                                    : _destCtrl.text,
-                                taxiZone: selected.name,
-                              )),
-                    ),
+                    onPressed:
+                        _submitting ? null : () => _confirm(app, selected),
                     icon: const Icon(Icons.directions_walk),
                     label: Text('Reserver - rejoindre ${selected.shortName}'),
                   ),
@@ -214,7 +301,11 @@ class _ReservationTaxiScreenState extends State<ReservationTaxiScreen> {
 }
 
 class _TaxiZone {
-  const _TaxiZone(this.name, this.distanceM, this.availableDrivers);
+  const _TaxiZone(this.name, this.distanceM, this.availableDrivers,
+      {this.id, this.lat, this.lng});
+  final int? id;
+  final double? lat;
+  final double? lng;
   final String name;
   final int distanceM;
   final int availableDrivers;

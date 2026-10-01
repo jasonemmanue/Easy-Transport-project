@@ -92,14 +92,25 @@ class PassengerWalletScreen extends StatelessWidget {
           const Text('Dernieres transactions',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
           const SizedBox(height: 10),
-          const _TxTile(
-              label: 'Course Domicile - Marche',
-              value: -2350,
-              date: 'Aujourd\'hui'),
-          const _TxTile(
-              label: 'Recharge Orange Money', value: 5000, date: 'Hier'),
-          const _TxTile(
-              label: 'Course Bureau - Domicile', value: -1800, date: 'Hier'),
+          if (app.live) ...[
+            if (app.transactions.isEmpty)
+              const Text('Aucune transaction pour le moment.',
+                  style: TextStyle(color: AppColors.textSecondary)),
+            for (final tx in app.transactions)
+              _TxTile(
+                label: tx['label'] as String? ?? tx['kind'] as String,
+                value: (tx['amount_xaf'] as num).toInt(),
+                date: _shortDate(tx['created_at'] as String),
+              ),
+          ] else ...const [
+            _TxTile(
+                label: 'Course Domicile - Marche',
+                value: -2350,
+                date: 'Aujourd\'hui'),
+            _TxTile(label: 'Recharge Orange Money', value: 5000, date: 'Hier'),
+            _TxTile(
+                label: 'Course Bureau - Domicile', value: -1800, date: 'Hier'),
+          ],
         ],
       ),
     );
@@ -173,13 +184,19 @@ class PassengerWalletScreen extends StatelessWidget {
                             Text('Montant minimum de recharge : 500 XAF')));
                     return;
                   }
-                  context.read<AppState>().reloadWallet(amount);
+                  final messenger = ScaffoldMessenger.of(context);
                   Navigator.of(sheetCtx).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            'Recharge de $amount XAF via $operator effectuee')),
-                  );
+                  context
+                      .read<AppState>()
+                      .reloadWallet(amount,
+                          channel: operator == 'Orange Money'
+                              ? 'orange_money'
+                              : 'mtn_momo')
+                      .then((_) => messenger.showSnackBar(SnackBar(
+                          content: Text(
+                              'Recharge de $amount XAF via $operator effectuee'))))
+                      .catchError((Object e) => messenger.showSnackBar(
+                          SnackBar(content: Text(apiErrorMessage(e)))));
                 },
                 icon: const Icon(Icons.check),
                 label: Text('Valider avec $operator'),
@@ -247,4 +264,10 @@ class _TxTile extends StatelessWidget {
       ),
     );
   }
+}
+
+String _shortDate(String iso) {
+  final d = DateTime.parse(iso).toLocal();
+  String two(int v) => v.toString().padLeft(2, '0');
+  return '${two(d.day)}/${two(d.month)} ${two(d.hour)}:${two(d.minute)}';
 }
