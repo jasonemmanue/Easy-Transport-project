@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -30,6 +31,15 @@ class Settings(BaseSettings):
     TIMEZONE: str = "Africa/Douala"
 
     CORS_ORIGINS: str = "*"
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def _psycopg2_driver(cls, v: str) -> str:
+        # Railway / Heroku fournissent postgres:// ou postgresql:// : on force le driver psycopg2.
+        for prefix in ("postgres://", "postgresql://"):
+            if v.startswith(prefix):
+                return "postgresql+psycopg2://" + v[len(prefix):]
+        return v
 
 
 settings = Settings()

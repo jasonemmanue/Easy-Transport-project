@@ -70,6 +70,9 @@ npm run dev
 
 Détails de l'API (routes, comptes de démo, partage d'objectif, cache Redis) : [API/README.md](API/README.md).
 
+### Environnement de test hébergé (Railway)
+API + PostgreSQL + Redis + Backoffice via le CLI Railway : [deploy/RAILWAY.md](deploy/RAILWAY.md).
+
 ## Charte graphique
 
 - Carlinq Flexible : bleu royal `#0D47A1`
